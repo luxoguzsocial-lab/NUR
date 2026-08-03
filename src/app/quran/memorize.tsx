@@ -547,8 +547,9 @@ export default function MemorizeScreen() {
         style={{ marginBottom: Spacing.sm }}
       />
       <Button
-        title={t('memorize.srsStart')}
-        onPress={() => router.push('/quran/review')}
+        title={t('coach.title')}
+        variant="secondary"
+        onPress={() => router.push('/quran/coach')}
         style={{ marginBottom: Spacing.sm }}
       />
       <ThemedText variant="caption">{t('memorize.reviewHint')}</ThemedText>

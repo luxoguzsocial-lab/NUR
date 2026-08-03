@@ -292,6 +292,31 @@ export default function QuranTabScreen() {
             </Card>
           </View>
 
+          {/* Okuma Koçu girişi */}
+          <Card style={{ marginTop: Spacing.sm }} onPress={() => router.push('/quran/coach')}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
+              <View
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 21,
+                  backgroundColor: theme.primarySoft,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="mic-outline" size={20} color={theme.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <ThemedText variant="label">{t('coach.title')}</ThemedText>
+                <ThemedText variant="caption" numberOfLines={2}>
+                  {t('coach.subtitle')}
+                </ThemedText>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+            </View>
+          </Card>
+
           {/* Yer imleri */}
           <SectionHeader title={t('quran.bookmarks')} />
           {progress.bookmarks.length === 0 ? (

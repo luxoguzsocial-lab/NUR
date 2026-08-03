@@ -54,6 +54,8 @@ export const trContent = {
     sound: 'Tık sesi',
     beadColor: 'Tesbih rengi',
     focusMode: 'Odak modu',
+    pocketMode: 'Cep modu',
+    pocketExitHint: 'Çıkmak için basılı tutun',
     focusExit: 'Odak modundan çık',
     historyTitle: 'Günlük geçmiş (son 7 gün)',
     historyEmpty: 'Bu gün zikir çekilmemiş.',

@@ -94,9 +94,7 @@ export default function ZikirScreen() {
   const tickPlayer = useAudioPlayer(TICK_SOUND);
 
   const [focusMode, setFocusMode] = useState(false);
-  const [customFormOpen, setCustomFormOpen] = useState(false);
-  const [customName, setCustomName] = useState('');
-  const [customTarget, setCustomTarget] = useState('33');
+  const [pocketMode, setPocketMode] = useState(false);
   const [duaQuery, setDuaQuery] = useState('');
   const [duaCategory, setDuaCategory] = useState<string | null>(null);
 
@@ -138,10 +136,19 @@ export default function ZikirScreen() {
     addDhikrToTracker(dateISO, 1);
     const next = count + 1;
     const completedRound = next % active.target === 0;
+    // Günlük hedefe tam bu dokunuşla ulaşıldı mı? (belirgin, farklı titreşim deseni)
+    const crossedDailyGoal = todayTotal < store.dailyGoal && todayTotal + 1 >= store.dailyGoal;
     if (store.vibration) {
-      void (completedRound
-        ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+      if (crossedDailyGoal) {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setTimeout(() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 220);
+        setTimeout(() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 440);
+      } else if (completedRound) {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setTimeout(() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 200);
+      } else {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
     }
     if (store.sound) {
       tickPlayer.seekTo(0);
@@ -156,15 +163,6 @@ export default function ZikirScreen() {
     confirmDialog(t('common.confirmDeleteTitle'), t('tasbih.resetConfirm'), t('common.reset'), () => store.resetCount(active.id), t('common.cancel'));
   };
 
-  const addCustom = () => {
-    const target = parseInt(customTarget, 10);
-    if (!customName.trim() || !Number.isFinite(target) || target < 1) return;
-    store.addCustomDhikr(customName.trim(), target);
-    setCustomName('');
-    setCustomTarget('33');
-    setCustomFormOpen(false);
-  };
-
   const filteredDuas = useMemo(() => {
     let list = duaQuery.trim() ? searchDuas(duaQuery) : DUAS;
     if (duaCategory) list = list.filter((d) => d.category === duaCategory);
@@ -175,6 +173,35 @@ export default function ZikirScreen() {
     () => [...new Set(DUAS.map((d) => d.category))],
     [],
   );
+
+  // ——— Cep modu: simsiyah ekran, her dokunuş sayar, uzun basınca çıkılır ———
+  if (pocketMode) {
+    return (
+      <Pressable
+        onPress={tap}
+        onLongPress={() => setPocketMode(false)}
+        delayLongPress={800}
+        accessibilityRole="button"
+        accessibilityLabel={t('tasbih.tapToCount')}
+        style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <KeepAwakeWhileFocused />
+        <ThemedText style={{ fontSize: 64, fontWeight: '200', color: 'rgba(255,255,255,0.25)' }}>
+          {shownCount}
+        </ThemedText>
+        <ThemedText
+          variant="caption"
+          style={{
+            position: 'absolute',
+            bottom: insets.bottom + Spacing.xl,
+            color: 'rgba(255,255,255,0.2)',
+          }}
+        >
+          {t('tasbih.pocketExitHint')}
+        </ThemedText>
+      </Pressable>
+    );
+  }
 
   // ——— Odak modu ———
   if (focusMode) {
@@ -267,54 +294,6 @@ export default function ZikirScreen() {
             <Ionicons name="chevron-forward" size={22} color={theme.textSecondary} />
           </Pressable>
         </View>
-        {/* Özel zikir ekle */}
-        {!customFormOpen ? (
-          <Pressable
-            onPress={() => setCustomFormOpen(true)}
-            accessibilityRole="button"
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: Spacing.sm }}
-          >
-            <Ionicons name="add-circle-outline" size={16} color={theme.primary} />
-            <ThemedText variant="label" color={theme.primary}>
-              {t('tasbih.addCustomTitle')}
-            </ThemedText>
-          </Pressable>
-        ) : (
-          <View style={{ marginTop: Spacing.md, gap: Spacing.sm }}>
-            <TextInput
-              value={customName}
-              onChangeText={setCustomName}
-              placeholder={t('tasbih.customNamePlaceholder')}
-              placeholderTextColor={theme.textSecondary}
-              style={{
-                borderWidth: 1,
-                borderColor: theme.border,
-                borderRadius: Radius.md,
-                padding: Spacing.sm,
-                color: theme.text,
-              }}
-            />
-            <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
-              <TextInput
-                value={customTarget}
-                onChangeText={setCustomTarget}
-                placeholder={t('tasbih.customTargetPlaceholder')}
-                placeholderTextColor={theme.textSecondary}
-                keyboardType="number-pad"
-                style={{
-                  flex: 1,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  borderRadius: Radius.md,
-                  padding: Spacing.sm,
-                  color: theme.text,
-                }}
-              />
-              <Chip label={t('common.cancel')} onPress={() => setCustomFormOpen(false)} />
-              <Chip label={t('common.add')} selected onPress={addCustom} />
-            </View>
-          </View>
-        )}
       </Card>
 
       {/* Dairesel sayaç — dokununca sayar */}
@@ -369,6 +348,30 @@ export default function ZikirScreen() {
         <Ionicons name="scan-outline" size={16} color={theme.primary} />
         <ThemedText variant="label" color={theme.primary}>
           {t('tasbih.focusMode')}
+        </ThemedText>
+      </Pressable>
+
+      {/* Cep modu */}
+      <Pressable
+        onPress={() => setPocketMode(true)}
+        accessibilityRole="button"
+        style={{
+          alignSelf: 'center',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+          backgroundColor: theme.surface,
+          borderWidth: 1,
+          borderColor: theme.border,
+          borderRadius: Radius.full,
+          paddingHorizontal: Spacing.lg,
+          paddingVertical: Spacing.sm,
+          marginTop: Spacing.sm,
+        }}
+      >
+        <Ionicons name="moon-outline" size={16} color={theme.primary} />
+        <ThemedText variant="label" color={theme.primary}>
+          {t('tasbih.pocketMode')}
         </ThemedText>
       </Pressable>
 

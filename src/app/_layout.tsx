@@ -66,6 +66,7 @@ export default function RootLayout() {
         <Stack.Screen name="hadiths" options={{ title: t('hadiths.title') }} />
         <Stack.Screen name="assistant" options={{ title: t('tabs.assistant') }} />
         <Stack.Screen name="qibla" options={{ title: t('qibla.title') }} />
+        <Stack.Screen name="mosques" options={{ title: t('mosques.title') }} />
         <Stack.Screen name="calendar" options={{ title: t('calendar.title') }} />
         <Stack.Screen name="tracker" options={{ title: t('tracker.title') }} />
         <Stack.Screen name="saved" options={{ title: t('saved.title') }} />

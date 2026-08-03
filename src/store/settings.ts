@@ -55,6 +55,8 @@ export interface SettingsState {
   madhab: MadhabId;
   /** Vakit başına dakika düzeltmesi */
   adjustments: Record<PrayerId, number>;
+  /** Ezandan kamete tahmini gecikme (dk) — kullanıcı kendi camisine göre ayarlar */
+  congregationOffsets: Record<PrayerId, number>;
   notifications: NotificationPrefs;
   quran: QuranPrefs;
   videoAutoplay: boolean;
@@ -71,6 +73,7 @@ export interface SettingsState {
   setNotification: <K extends keyof NotificationPrefs>(key: K, value: NotificationPrefs[K]) => void;
   setQuranPref: <K extends keyof QuranPrefs>(key: K, value: QuranPrefs[K]) => void;
   setAdjustment: (prayer: PrayerId, minutes: number) => void;
+  setCongregationOffset: (prayer: PrayerId, minutes: number) => void;
   resetAll: () => void;
 }
 
@@ -90,6 +93,8 @@ const DEFAULTS = {
   calcMethod: 'diyanet' as CalcMethodId,
   madhab: 'hanafi' as MadhabId,
   adjustments: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
+  // Türkiye cami pratiğine yakın varsayılanlar; ekranda "tahmini" olarak etiketlenir
+  congregationOffsets: { fajr: 25, sunrise: 0, dhuhr: 15, asr: 10, maghrib: 5, isha: 15 },
   notifications: {
     prayersEnabled: true,
     perPrayer: { fajr: true, sunrise: false, dhuhr: true, asr: true, maghrib: true, isha: true },
@@ -134,6 +139,8 @@ export const useSettingsStore = create<SettingsState>()(
       setQuranPref: (key, value) => set((s) => ({ quran: { ...s.quran, [key]: value } })),
       setAdjustment: (prayer, minutes) =>
         set((s) => ({ adjustments: { ...s.adjustments, [prayer]: minutes } })),
+      setCongregationOffset: (prayer, minutes) =>
+        set((s) => ({ congregationOffsets: { ...s.congregationOffsets, [prayer]: minutes } })),
       resetAll: () => set({ ...DEFAULTS }),
     }),
     { name: 'nur-settings', storage: createJSONStorage(() => AsyncStorage) },

@@ -842,7 +842,9 @@ export default function HomeScreen() {
           <ShortcutTile icon="notifications-outline" label={t('notifications.title')} onPress={() => router.push('/notifications')} />
           <ShortcutTile icon="sunny-outline" label={t('menu.daily')} onPress={() => router.push('/daily')} />
           <ShortcutTile icon="repeat-outline" label={t('home.qadaShortcut')} onPress={() => router.push('/qada')} />
-          <ShortcutTile icon="repeat-outline" label={t('home.qadaShortcut')} onPress={() => router.push('/qada')} />
+          <ShortcutTile icon="business-outline" label={t('mosques.title')} onPress={() => router.push('/mosques')} />
+          <ShortcutTile icon="mic-outline" label={t('coach.title')} onPress={() => router.push('/quran/coach')} />
+          <ShortcutTile icon="happy-outline" label={t('kids.title')} onPress={() => router.push('/kids')} />
           <ShortcutTile icon="chatbubbles-outline" label={t('tasbih.sectionHadiths')} onPress={() => router.push('/hadiths')} />
           <ShortcutTile icon="person-outline" label={t('menu.profile')} onPress={() => router.push('/profile')} />
           <ShortcutTile icon="information-circle-outline" label={t('menu.about')} onPress={() => router.push('/about')} />

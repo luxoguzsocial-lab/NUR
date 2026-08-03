@@ -478,8 +478,8 @@ export default function PrayerTabScreen() {
             </View>
           </Card>
 
-          {/* Kaza takibi girişi */}
-          <Card style={{ marginTop: Spacing.md }} onPress={() => router.push('/qada')}>
+          {/* Yakındaki camiler girişi */}
+          <Card style={{ marginTop: Spacing.md }} onPress={() => router.push('/mosques')}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
               <View
                 style={{
@@ -491,11 +491,11 @@ export default function PrayerTabScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <Ionicons name="repeat-outline" size={20} color={theme.primary} />
+                <Ionicons name="business-outline" size={20} color={theme.primary} />
               </View>
               <View style={{ flex: 1 }}>
-                <ThemedText variant="label">{t('qada.title')}</ThemedText>
-                <ThemedText variant="caption" numberOfLines={1}>{t('qada.intro')}</ThemedText>
+                <ThemedText variant="label">{t('mosques.title')}</ThemedText>
+                <ThemedText variant="caption" numberOfLines={1}>{t('mosques.subtitle')}</ThemedText>
               </View>
               <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
             </View>

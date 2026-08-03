@@ -84,6 +84,9 @@ export interface AyahRecitation {
   isPlayingAyah: (surah: number, ayah: number) => boolean;
   /** Bu ayet için istek/yükleme sürüyor mu? */
   isPendingAyah: (surah: number, ayah: number) => boolean;
+  /** Oynatma hızı (1 = normal). Yavaş dinleme için 0.75 gibi değerler. */
+  rate: number;
+  setRate: (rate: number) => void;
 }
 
 /**
@@ -96,6 +99,15 @@ export function useAyahRecitation(reciterId: string): AyahRecitation {
   const [current, setCurrent] = useState<RecitationTarget | null>(null);
   const [pendingTarget, setPendingTarget] = useState<RecitationTarget | null>(null);
   const [networkError, setNetworkError] = useState(false);
+  const [rate, setRateState] = useState(1);
+
+  const setRate = useCallback(
+    (next: number) => {
+      setRateState(next);
+      player.setPlaybackRate(next);
+    },
+    [player],
+  );
 
   const play = useCallback(
     async (surah: number, ayah: number): Promise<boolean> => {
@@ -109,12 +121,13 @@ export function useAyahRecitation(reciterId: string): AyahRecitation {
         return false;
       }
       player.replace({ uri: url });
+      player.setPlaybackRate(rate);
       player.play();
       setCurrent({ surah, ayah });
       setPendingTarget(null);
       return true;
     },
-    [player, reciterId],
+    [player, reciterId, rate],
   );
 
   const replay = useCallback(async (): Promise<void> => {
@@ -150,5 +163,7 @@ export function useAyahRecitation(reciterId: string): AyahRecitation {
     pause,
     isPlayingAyah,
     isPendingAyah,
+    rate,
+    setRate,
   };
 }

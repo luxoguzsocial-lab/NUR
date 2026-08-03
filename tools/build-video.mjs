@@ -56,7 +56,7 @@ function probeDurationSec(file) {
 }
 
 /** Satırı ~26 karakterde sararak drawtext için çok satırlı metin dosyası yazar. */
-function wrapText(line, width = 26) {
+function wrapText(line, width = 28) {
   const words = line.split(' ');
   const rows = [];
   let current = '';
@@ -88,17 +88,31 @@ async function build(id) {
 
   // Satır başına eşit süre; altyazı metin dosyaları (Türkçe karakter kaçış derdi yok)
   const perLine = audioDur / texts.lines.length;
+  const LINE_SP = 8;
+  // Metnin yayılacağı hedef genişlik (bant 544px, iç pay 2×16px)
+  const TARGET_TEXT_W = 512;
+  // Arial Bold ortalama karakter genişliği ≈ 0.52 × punto
+  const AVG_CHAR = 0.52;
   const drawtexts = texts.lines.map((line, i) => {
+    const wrapped = wrapText(line);
+    const rowList = wrapped.split('\n');
+    const rows = rowList.length;
+    // Puntoyu, en uzun satır bandı dolduracak şekilde hesapla (yayma etkisi)
+    const maxChars = Math.max(...rowList.map((r) => r.length));
+    const fontSize = Math.max(22, Math.min(40, Math.round(TARGET_TEXT_W / (maxChars * AVG_CHAR))));
     const textFile = join(TMP_DIR, `${id}-sub-${i}.txt`);
-    writeFileSync(textFile, wrapText(line), 'utf8');
+    writeFileSync(textFile, wrapped, 'utf8');
     const start = (i * perLine).toFixed(2);
     const end = (i === texts.lines.length - 1 ? totalDur : (i + 1) * perLine).toFixed(2);
     const tf = textFile.replaceAll('\\', '/').replace(':', '\\:');
-    // Altyazı videonun orta-görünür bölgesinde: y = yüksekliğin %52'si
+    const textH = rows * fontSize + (rows - 1) * LINE_SP;
+    const bandH = textH + 30;
+    const bandY = Math.round((1024 - bandH) / 2 + 1024 * 0.08);
     return (
-      `drawtext=fontfile='${FONT}':textfile='${tf}':fontsize=30:fontcolor=white:` +
-      `borderw=2:bordercolor=black@0.85:box=1:boxcolor=black@0.42:boxborderw=16:` +
-      `x=(w-text_w)/2:y=h*0.52:line_spacing=8:enable='between(t,${start},${end})'`
+      `drawbox=x=16:y=${bandY}:w=544:h=${bandH}:color=black@0.45:t=fill:enable='between(t,${start},${end})',` +
+      `drawtext=fontfile='${FONT}':textfile='${tf}':fontsize=${fontSize}:fontcolor=white:` +
+      `borderw=2:bordercolor=black@0.85:` +
+      `x=(w-text_w)/2:y=(h-text_h)/2+h*0.08:line_spacing=${LINE_SP}:enable='between(t,${start},${end})'`
     );
   });
 
