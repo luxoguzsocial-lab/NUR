@@ -41,3 +41,10 @@ example
 # generated native folders
 /ios
 /android
+.expo-export-test/
+
+# Video/Kuran üretim hattı ara dosyaları (yeniden üretilebilir)
+tools/raw/
+tools/narration/
+tools/tmp/
+tools/quran-src/

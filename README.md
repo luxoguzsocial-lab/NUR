@@ -1,56 +1,41 @@
-# Welcome to your Expo app 👋
+# NUR — İslami Yaşam Uygulaması
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Namaz vakitleri, Kur'an-ı Kerim, dualar, öğrenme programları ve kaynaklı AI asistanı bir arada
+sunan, Allah rızası gözetilerek geliştirilen mobil uygulama. Expo (React Native) + TypeScript.
 
-## Get started
+## Özellikler (P0)
 
-1. Install dependencies
+- **Namaz vakitleri** — Diyanet uyumlu dahil 6 hesaplama yöntemi, Hanefi/standart ikindi,
+  dakika düzeltmeleri, günlük/aylık görünüm, vakit bildirimleri; tamamen çevrimdışı hesaplama
+- **Kıble** — sensör destekli pusula + matematiksel açı ve Kâbe mesafesi (sensörsüz cihazlarda sayısal yön)
+- **Kur'an** — okuma (Arapça/meal/transkripsiyon), tecvit renkleri (demo), sesli dinleme,
+  hatim planları, ezber modu (kayıt dahil), sure dersleri
+- **Zikir & Dua** — animasyonlu dijital tesbih (odak modu, zincir mod), kaynaklı dua koleksiyonu, Esmaül Hüsna (99 isim), seçme hadisler
+- **İslami takvim** — hicri tarih, kandiller, bayramlar, Ramazan modu (imsakiye, sayaçlar)
+- **İbadet takibi** — yalnızca cihazda, karşılaştırmasız ve puansız
+- **İlham** — sesli/altyazılı video akışı (bağımlılık hedeflemeyen tasarım), kategori filtreleri; arama ve öğrenme programları ayrı ekranlarda
+- **AI Asistan** — kaynaksız cevap göstermeyen, fetva vermeyen demo RAG asistanı
+- **Türkçe** tam destek; İngilizce ve Arapça (RTL) altyapısı hazır
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Geliştirme
 
 ```bash
-npm run reset-project
+npm install
+npm start          # Expo dev server (Expo Go veya dev build)
+npm run typecheck  # TypeScript strict kontrolü
+npm run lint       # ESLint
+npm test           # Jest (namaz vakti / kıble / hicri takvim testleri)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Belgeler
 
-### Other setup steps
+- [docs/P0-SPEC.md](docs/P0-SPEC.md) — P0 kapsam listesi ve kabul kriterleri
+- [docs/CONTENT-SOURCES.md](docs/CONTENT-SOURCES.md) — dinî içerik kaynakları ve lisanslar
+- [CLAUDE.md](CLAUDE.md) — mimari ve katkı kuralları
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## İlkeler
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Bütün dinî içerik kaynaklıdır; kaynaksız içerik gösterilmez.
+- İbadet verileri varsayılan olarak özeldir; sosyal karşılaştırma/puanlama yoktur.
+- Temel özellikler hesap gerektirmez ve ücretsizdir.
+- API anahtarı olmadan uygulama demo modunda tam çalışır.
