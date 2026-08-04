@@ -345,6 +345,7 @@ export const VIDEOS: VideoItem[] = [
     id: 'v12',
     title: 'Gıybet: Dilin ağır imtihanı',
     description: 'Gıybetin tanımı, zararları ve dilini korumanın pratik yolları.',
+    media: require('../../assets/videos/v12.mp4') as number,
     creator: creator('c1'),
     category: 'ahlak',
     durationSec: 115,
