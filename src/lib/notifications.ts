@@ -1,18 +1,26 @@
+import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 import { getPrayerTimesForDate, PRAYER_ORDER } from '@/lib/prayer-times';
 import type { SettingsState } from '@/store/settings';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// expo-notifications web'de desteklenmez; web'de bütün bildirim işlemleri
+// sessizce atlanır (uygulama tarayıcıda bildirimsiz çalışır).
+const NOTIFICATIONS_SUPPORTED = Platform.OS !== 'web';
+
+if (NOTIFICATIONS_SUPPORTED) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 export async function requestNotificationPermission(): Promise<boolean> {
+  if (!NOTIFICATIONS_SUPPORTED) return false;
   const settings = await Notifications.getPermissionsAsync();
   if (settings.granted) return true;
   const req = await Notifications.requestPermissionsAsync();
@@ -31,6 +39,7 @@ export async function syncPrayerNotifications(
   prayerNames: Record<string, string>,
   reminderTitle: string,
 ): Promise<void> {
+  if (!NOTIFICATIONS_SUPPORTED) return;
   await Notifications.cancelAllScheduledNotificationsAsync();
   if (!s.notifications.prayersEnabled) return;
 
