@@ -65,6 +65,8 @@ export interface ProgressState {
   lessonNotes: Record<string, string>;
   /** dateISO (YYYY-MM-DD) -> okunan dakika */
   quranMinutesByDay: Record<string, number>;
+  /** "Okudum" işaretlenen sureler */
+  readSurahs: number[];
 
   setLastRead: (ref: AyahRef) => void;
   toggleBookmark: (ref: AyahRef) => void;
@@ -81,6 +83,7 @@ export interface ProgressState {
   setLessonCompleted: (lessonId: string, done: boolean) => void;
   setLessonNote: (lessonId: string, text: string) => void;
   addQuranMinutes: (dateISO: string, minutes: number) => void;
+  toggleSurahRead: (surah: number) => void;
   resetAll: () => void;
 }
 
@@ -95,6 +98,7 @@ const EMPTY = {
   completedLessons: {} as Record<string, boolean>,
   lessonNotes: {} as Record<string, string>,
   quranMinutesByDay: {} as Record<string, number>,
+  readSurahs: [] as number[],
 };
 
 const keyOf = (ref: AyahRef) => `${ref.surah}:${ref.ayah}`;
@@ -194,6 +198,12 @@ export const useProgressStore = create<ProgressState>()(
             ...s.quranMinutesByDay,
             [dateISO]: (s.quranMinutesByDay[dateISO] ?? 0) + minutes,
           },
+        })),
+      toggleSurahRead: (surah) =>
+        set((s) => ({
+          readSurahs: s.readSurahs.includes(surah)
+            ? s.readSurahs.filter((n) => n !== surah)
+            : [...s.readSurahs, surah],
         })),
       resetAll: () => set({ ...EMPTY }),
     }),

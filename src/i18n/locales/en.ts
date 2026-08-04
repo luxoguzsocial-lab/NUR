@@ -558,6 +558,8 @@ export const en = {
     offlineInfo: 'All Quran text in the app is stored on your device and can be read offline.',
     demoPackage: 'Demo content package',
     lessonAvailable: 'Surah lesson available',
+    readBadge: 'Read',
+    markRead: 'I read it',
     reader: {
       textSourceLabel: 'Text',
       translationSourceLabel: 'Translation',

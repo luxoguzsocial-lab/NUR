@@ -21,6 +21,7 @@ function SurahRow({ meta }: { meta: SurahMeta }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const available = isSurahAvailable(meta.number);
+  const isRead = useProgressStore((s) => s.readSurahs.includes(meta.number));
   // Not: Ders kısayolu, satır butonunun İÇİNE konursa web'de geçersiz iç içe
   // <button> üretir; bu yüzden iki kardeş Pressable olarak yerleştirildi.
   return (
@@ -68,6 +69,28 @@ function SurahRow({ meta }: { meta: SurahMeta }) {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
             <ThemedText variant="label">{meta.turkishName}</ThemedText>
             {available ? <Ionicons name="reader-outline" size={13} color={theme.accent} /> : null}
+            {isRead ? (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 3,
+                  backgroundColor: theme.primarySoft,
+                  borderRadius: Radius.full,
+                  paddingHorizontal: Spacing.sm,
+                  paddingVertical: 1,
+                }}
+              >
+                <Ionicons name="checkmark-circle" size={11} color={theme.success} />
+                <ThemedText
+                  variant="caption"
+                  color={theme.success}
+                  style={{ fontWeight: '700' }}
+                >
+                  {t('quran.readBadge')}
+                </ThemedText>
+              </View>
+            ) : null}
           </View>
           <ThemedText variant="caption">
             {t('quran.ayahCount', { count: meta.ayahCount })} · {t(`quran.place.${meta.revelationPlace}`)} ·{' '}

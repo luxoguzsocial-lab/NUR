@@ -757,7 +757,20 @@ export default function OnboardingScreen() {
             <ThemedText variant="caption" style={{ textAlign: 'center' }}>
               {t('onboarding.accountComingNote')}
             </ThemedText>
-            <Button title={t('onboarding.continueAsGuest')} onPress={finish} />
+            <Button
+              title={t('common.continue')}
+              onPress={finish}
+              disabled={!settings.userName.trim()}
+            />
+            <Button
+              title={t('onboarding.continueAsGuest')}
+              variant="ghost"
+              onPress={() => {
+                // Misafir: isim kaydedilmeden devam edilir
+                settings.set('userName', '');
+                finish();
+              }}
+            />
           </View>
         )}
       </View>

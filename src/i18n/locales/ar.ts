@@ -532,6 +532,8 @@ export const ar = {
     offlineInfo: 'جميع نصوص القرآن في التطبيق محفوظة على جهازكم ويمكن قراءتها دون اتصال.',
     demoPackage: 'حزمة المحتوى التجريبية',
     lessonAvailable: 'يوجد درس للسورة',
+    readBadge: 'مقروءة',
+    markRead: 'قرأتها',
     reader: {
       textSourceLabel: 'النص',
       translationSourceLabel: 'الترجمة',

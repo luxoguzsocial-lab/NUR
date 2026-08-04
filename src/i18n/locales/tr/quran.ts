@@ -90,6 +90,8 @@ export const trQuran = {
     offlineInfo: 'Uygulamadaki bütün Kur\'an metinleri cihazınızda saklanır ve çevrimdışı okunabilir.',
     demoPackage: 'Demo içerik paketi',
     lessonAvailable: 'Sure dersi var',
+    readBadge: 'Okundu',
+    markRead: 'Okudum',
     reader: {
       textSourceLabel: 'Metin',
       translationSourceLabel: 'Meal',

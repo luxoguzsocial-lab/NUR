@@ -57,6 +57,8 @@ export default function SurahReaderScreen() {
   const toggleBookmark = useProgressStore((s) => s.toggleBookmark);
   const upsertNote = useProgressStore((s) => s.upsertNote);
   const setLastRead = useProgressStore((s) => s.setLastRead);
+  const isSurahRead = useProgressStore((s) => s.readSurahs.includes(surahNumber));
+  const toggleSurahRead = useProgressStore((s) => s.toggleSurahRead);
   const savedItems = useSavedStore((s) => s.items);
   const toggleSaved = useSavedStore((s) => s.toggle);
 
@@ -299,6 +301,42 @@ export default function SurahReaderScreen() {
               </ThemedText>
             </Pressable>
           ) : null}
+          <Pressable
+            onPress={() => {
+              void Haptics.selectionAsync();
+              toggleSurahRead(surahNumber);
+            }}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSurahRead }}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: Spacing.xs,
+              backgroundColor: pressed
+                ? theme.surfaceAlt
+                : isSurahRead
+                  ? theme.primarySoft
+                  : theme.surfaceAlt,
+              borderRadius: Radius.full,
+              paddingHorizontal: Spacing.md,
+              paddingVertical: Spacing.xs + 2,
+              borderWidth: 1,
+              borderColor: isSurahRead ? theme.success : theme.border,
+            })}
+          >
+            <Ionicons
+              name={isSurahRead ? 'checkmark-circle' : 'checkmark-circle-outline'}
+              size={14}
+              color={isSurahRead ? theme.success : theme.textSecondary}
+            />
+            <ThemedText
+              variant="caption"
+              color={isSurahRead ? theme.success : theme.textSecondary}
+              style={isSurahRead ? { fontWeight: '700' } : undefined}
+            >
+              {isSurahRead ? t('quran.readBadge') : t('quran.markRead')}
+            </ThemedText>
+          </Pressable>
         </View>
         <SourceBadge source={`${t('quran.reader.textSourceLabel')}: ${QURAN_TEXT_SOURCE}`} />
         <SourceBadge source={`${t('quran.reader.translationSourceLabel')}: ${QURAN_TRANSLATION_SOURCE}`} />
