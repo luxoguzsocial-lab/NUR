@@ -75,27 +75,35 @@ function HeaderIcon({ icon, onPress, label }: { icon: IconName; onPress: () => v
 
 function ShortcutTile({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   const theme = useTheme();
+  // Dış sarmalayıcı tam %25 genişlik alır; boşluk içteki padding ile verilir.
+  // Böylece her satır aynı hizada 4 sütun olur (son satır solda düzgün başlar).
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      style={({ pressed }) => ({
-        width: '23%',
-        aspectRatio: 0.95,
-        borderRadius: Radius.lg,
-        backgroundColor: pressed ? theme.surfaceAlt : theme.surface,
-        borderWidth: 1,
-        borderColor: theme.border,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: Spacing.sm,
-      })}
-    >
-      <Ionicons name={icon} size={24} color={theme.primary} />
-      <ThemedText variant="caption" style={{ textAlign: 'center' }} numberOfLines={1}>
-        {label}
-      </ThemedText>
-    </Pressable>
+    <View style={{ width: '25%', padding: Spacing.xs / 2 }}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        style={({ pressed }) => ({
+          aspectRatio: 0.95,
+          borderRadius: Radius.lg,
+          backgroundColor: pressed ? theme.surfaceAlt : theme.surface,
+          borderWidth: 1,
+          borderColor: theme.border,
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: Spacing.xs,
+          paddingHorizontal: 2,
+        })}
+      >
+        <Ionicons name={icon} size={24} color={theme.primary} />
+        <ThemedText
+          variant="caption"
+          style={{ textAlign: 'center', fontSize: 11, lineHeight: 13 }}
+          numberOfLines={2}
+        >
+          {label}
+        </ThemedText>
+      </Pressable>
+    </View>
   );
 }
 
@@ -826,8 +834,7 @@ export default function HomeScreen() {
           style={{
             flexDirection: 'row',
             flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            rowGap: Spacing.sm,
+            marginHorizontal: -(Spacing.xs / 2),
           }}
         >
           <ShortcutTile icon="checkmark-done-outline" label={t('menu.tracker')} onPress={() => router.push('/tracker')} />
