@@ -126,4 +126,64 @@ export const VIDEO_TEXTS = {
     speech:
       'Gıybet, kişinin arkasından hoşlanmayacağı şekilde konuşmaktır. Hucurât suresi on ikinci ayet, gıybeti ağır bir benzetmeyle yasaklar. Söz doğru olsa bile gıybet olabilir; yalansa iftiradır. Bir mecliste gıybet başlarsa konuyu değiştirin veya ayrılın.',
   },
+  v13: {
+    lines: [
+      'İstiğfar, geçmişi silip yeni bir sayfa açmaktır.',
+      'Nûh suresi 10: Rabbinizden bağışlanma dileyin; O çok bağışlayıcıdır.',
+      'Peygamberimiz günde yüz kez istiğfar ederdi.',
+      'Yatmadan önce üç kez estağfirullah demeyi alışkanlık edinin.',
+    ],
+    speech:
+      'İstiğfar, geçmişi silip yeni bir sayfa açmaktır. Nûh suresi onuncu ayet: Rabbinizden bağışlanma dileyin; O çok bağışlayıcıdır. Peygamberimiz günde yüz kez istiğfar ederdi. Yatmadan önce üç kez estağfirullah demeyi alışkanlık edinin.',
+  },
+  v14: {
+    lines: [
+      'Anne babaya iyilik, Kur\'an\'da kulluğun hemen yanında anılır.',
+      'İsrâ 23: onlara "öf" bile demeyin.',
+      'Rabbin rızası, anne babanın rızasındadır.',
+      'Bugün onları arayın; kısa bir telefon bile gönül alır.',
+    ],
+    speech:
+      'Anne babaya iyilik, Kur\'an\'da kulluğun hemen yanında anılır. İsrâ suresi yirmi üçüncü ayet: onlara öf bile demeyin. Rabbin rızası, anne babanın rızasındadır. Bugün onları arayın; kısa bir telefon bile gönül alır.',
+  },
+  v15: {
+    lines: [
+      'Sadaka malı eksiltmez; bereketlendirir.',
+      'Bakara 261: bir tohum, yedi başak, her başakta yüz tane.',
+      'Küçük ama düzenli vermek, büyük ama tek seferden hayırlıdır.',
+      'Bu hafta bir ihtiyaç sahibine küçük bir iyilik planlayın.',
+    ],
+    speech:
+      'Sadaka malı eksiltmez; bereketlendirir. Bakara suresi iki yüz altmış birinci ayet: bir tohum, yedi başak, her başakta yüz tane. Küçük ama düzenli vermek, büyük ama tek seferden hayırlıdır. Bu hafta bir ihtiyaç sahibine küçük bir iyilik planlayın.',
+  },
+  v16: {
+    lines: [
+      'Tevekkül, tembellik değil; elinden geleni yapıp gerisini bırakmaktır.',
+      'Talâk 3: Kim Allah\'a tevekkül ederse, O ona yeter.',
+      'Kuşlar sabah aç çıkar, akşam tok döner.',
+      'Kaygılandığınızda önce tedbirinizi alın, sonra kalbinizi teslim edin.',
+    ],
+    speech:
+      'Tevekkül, tembellik değil; elinden geleni yapıp gerisini bırakmaktır. Talâk suresi üçüncü ayet: Kim Allah\'a tevekkül ederse, O ona yeter. Kuşlar sabah aç çıkar, akşam tok döner. Kaygılandığınızda önce tedbirinizi alın, sonra kalbinizi teslim edin.',
+  },
+  v17: {
+    lines: [
+      'Selam, iki kalp arasındaki en kısa köprüdür.',
+      'Nisâ 86: selama daha güzeliyle karşılık verin.',
+      'Selamı yaymak, sevginin ve imanın alametidir.',
+      'Bugün tanımadığınız bir komşuya önce siz selam verin.',
+    ],
+    speech:
+      'Selam, iki kalp arasındaki en kısa köprüdür. Nisâ suresi seksen altıncı ayet: selama daha güzeliyle karşılık verin. Selamı yaymak, sevginin ve imanın alametidir. Bugün tanımadığınız bir komşuya önce siz selam verin.',
+  },
+  v18: {
+    lines: [
+      'Gece, dünyanın sustuğu ve kalbin konuştuğu vakittir.',
+      'Müzzemmil 6: gece kalkışı daha etkili, okuyuşu daha sağlamdır.',
+      'Farzlardan sonra en faziletli namaz gece namazıdır.',
+      'Önce haftada bir gece, iki rekâtla başlayın.',
+    ],
+    speech:
+      'Gece, dünyanın sustuğu ve kalbin konuştuğu vakittir. Müzzemmil suresi altıncı ayet: gece kalkışı daha etkili, okuyuşu daha sağlamdır. Farzlardan sonra en faziletli namaz gece namazıdır. Önce haftada bir gece, iki rekâtla başlayın.',
+  },
 };
