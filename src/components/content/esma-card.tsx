@@ -1,4 +1,4 @@
-import { Share, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Card } from '@/components/card';
@@ -8,6 +8,7 @@ import { SourceBadge } from '@/components/ui-bits';
 import { FontSize, Radius, Spacing } from '@/constants/theme';
 import { ESMA_SOURCE, type EsmaName } from '@/data/esma';
 import { useTheme } from '@/hooks/use-theme';
+import { shareText } from '@/lib/share';
 import { useSavedStore } from '@/store/saved';
 
 interface Props {
@@ -40,7 +41,7 @@ export function EsmaCard({ esma }: Props) {
       esma.description,
       `${t('common.source')}: ${ESMA_SOURCE}`,
     ].join('\n');
-    Share.share({ message }).catch(() => undefined);
+    void shareText(message);
   };
 
   return (

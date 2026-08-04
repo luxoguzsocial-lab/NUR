@@ -51,6 +51,8 @@ export default function HadithsScreen() {
                 <View style={{ flexDirection: 'row', gap: Spacing.md }}>
                   <Pressable
                     accessibilityRole="button"
+                    accessibilityLabel={isSaved ? t('common.remove') : t('common.save')}
+                    hitSlop={8}
                     onPress={() =>
                       saved.toggle({
                         type: 'inspiration',
@@ -69,6 +71,8 @@ export default function HadithsScreen() {
                   </Pressable>
                   <Pressable
                     accessibilityRole="button"
+                    accessibilityLabel={t('common.share')}
+                    hitSlop={8}
                     onPress={() => void shareText(`“${h.textTr}”\n— ${h.source} · NUR`)}
                   >
                     <Ionicons name="share-outline" size={18} color={theme.primary} />

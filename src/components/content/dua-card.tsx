@@ -1,4 +1,4 @@
-import { Share, View } from 'react-native';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Card } from '@/components/card';
@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { SourceBadge } from '@/components/ui-bits';
 import { Spacing } from '@/constants/theme';
 import type { Dua } from '@/data/duas';
+import { shareText } from '@/lib/share';
 import { useSavedStore } from '@/store/saved';
 
 interface Props {
@@ -41,7 +42,7 @@ export function DuaCard({ dua }: Props) {
       '',
       `${t('common.source')}: ${dua.source}`,
     ].join('\n');
-    Share.share({ message }).catch(() => undefined);
+    void shareText(message);
   };
 
   return (
