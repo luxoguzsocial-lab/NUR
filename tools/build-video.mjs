@@ -23,9 +23,11 @@ const NARR_DIR = join(ROOT, 'tools', 'narration');
 const TMP_DIR = join(ROOT, 'tools', 'tmp');
 const OUT_DIR = join(ROOT, 'assets', 'videos');
 const FFMPEG = (await import('ffmpeg-static')).default;
-// Yaşlı-bilge ton (kullanıcı seçimi): Giuseppe — sıcak, olgun bariton
-const VOICE = 'it-IT-GiuseppeMultilingualNeural';
-const PROSODY = { rate: '-15%', pitch: '-12%' };
+// Ana dili Türkçe ses (kullanıcı seçimi: "Ses 1 — Emel sıcak/sakin").
+// Çok dilli sesler (Giuseppe vb.) tr-TR kilidine rağmen yabancı aksana kayıyor;
+// yerli ses telaffuzu garanti eder.
+const VOICE = 'tr-TR-EmelNeural';
+const PROSODY = { rate: '-12%', pitch: '-4%' };
 const FONT = 'C\\:/Windows/Fonts/arialbd.ttf';
 
 for (const d of [RAW_DIR, NARR_DIR, TMP_DIR, OUT_DIR]) mkdirSync(d, { recursive: true });
@@ -35,7 +37,9 @@ async function synthesize(id, text) {
   if (existsSync(outPath)) return outPath;
   const { MsEdgeTTS, OUTPUT_FORMAT } = await import('msedge-tts');
   const tts = new MsEdgeTTS();
-  await tts.setMetadata(VOICE, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
+  // voiceLocale verilmezse kütüphane dili ses adından (it-IT) çıkarır ve SSML'e
+  // xml:lang="it-IT" yazar; çok dilli ses Türkçe metni yabancı aksanla okur.
+  await tts.setMetadata(VOICE, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3, { voiceLocale: 'tr-TR' });
   const { audioStream } = await tts.toStream(text, PROSODY);
   const chunks = [];
   await new Promise((resolve, reject) => {

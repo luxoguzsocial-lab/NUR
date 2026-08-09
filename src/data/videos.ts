@@ -339,7 +339,7 @@ export const VIDEOS: VideoItem[] = [
       'Sen de bugün işlerine besmeleyle başla!',
     ],
     moderationStatus: 'approved',
-    thumbnailHue: 320,
+    thumbnailHue: 35,
   },
   {
     id: 'v12',
