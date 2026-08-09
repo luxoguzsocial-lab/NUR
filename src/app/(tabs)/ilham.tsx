@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
+import { router, useIsFocused } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList,
@@ -293,6 +293,8 @@ export default function IlhamScreen() {
   const insets = useSafeAreaInsets();
   const media = useMediaStore();
   const settings = useSettingsStore();
+  // Ekran odaktan çıkınca (başka sekme/ekran) oynatma durmalı; aksi hâlde ses arkada devam eder.
+  const focused = useIsFocused();
   const [activeIndex, setActiveIndex] = useState(0);
   const [breakDismissed, setBreakDismissed] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -339,7 +341,7 @@ export default function IlhamScreen() {
             <VideoPage
               video={item.video}
               height={height}
-              active={index === activeIndex && !showBreak}
+              active={focused && index === activeIndex && !showBreak}
               muted={muted}
               onToggleMute={() => setMuted((m) => !m)}
             />

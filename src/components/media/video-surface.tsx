@@ -13,6 +13,7 @@ export function VideoSurface({
   loop = true,
   muted = false,
   playbackRate = 1,
+  contentFit = 'contain',
   onToggle,
 }: {
   source: VideoSource;
@@ -20,6 +21,8 @@ export function VideoSurface({
   loop?: boolean;
   muted?: boolean;
   playbackRate?: number;
+  /** Altyazılar videoya gömülü olduğundan varsayılan 'contain'; kırpma içerik kaybettirir. */
+  contentFit?: 'contain' | 'cover';
   onToggle?: () => void;
 }) {
   const player = useVideoPlayer(source, (p) => {
@@ -47,8 +50,10 @@ export function VideoSurface({
     <Pressable style={StyleSheet.absoluteFill} onPress={onToggle} disabled={!onToggle}>
       <VideoView
         player={player}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
+        // Web'de stil doğrudan <video> elementine uygulanır; width/height verilmezse
+        // element kendi doğal boyutunda kalıp ekrandan taşar.
+        style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
+        contentFit={contentFit}
         nativeControls={false}
       />
       {!playing ? (
