@@ -184,7 +184,7 @@ export default function OnboardingScreen() {
   const [locationError, setLocationError] = useState(false);
 
   const stepIndex = STEPS.indexOf(step);
-  const heroBg = mode === 'dark' ? '#2E8F7C' : '#22A188';
+  const heroBg = mode === 'dark' ? '#1B2440' : '#0F172A';
 
   const next = () => {
     const n = STEPS[stepIndex + 1];

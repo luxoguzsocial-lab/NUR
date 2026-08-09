@@ -271,6 +271,7 @@ export const en = {
     prayerTracking: 'Prayer tracking',
     qibla: 'Qibla',
     dailyAyah: 'Verse of the day',
+    nightAyah: 'Verse of the night',
     dailyHadith: 'Hadith of the day',
     dailyDua: 'Dua of the day',
     dailyEsma: 'Name of Allah of the day',
@@ -292,6 +293,8 @@ export const en = {
     title: 'Prayer Times',
     daily: 'Daily',
     monthly: 'Monthly',
+    monthlyCalendar: 'Monthly calendar',
+    nextPrayerLabel: 'Next prayer',
     method: 'Calculation method',
     methodNames: {
       diyanet: 'Diyanet-compatible (Turkey)',

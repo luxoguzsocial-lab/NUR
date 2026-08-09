@@ -210,6 +210,7 @@ export const trCommon = {
     prayerTracking: 'Namaz takibi',
     qibla: 'Kıble',
     dailyAyah: 'Günün ayeti',
+    nightAyah: 'Gecenin ayeti',
     dailyHadith: 'Günün hadisi',
     dailyDua: 'Günün duası',
     dailyEsma: 'Günün Esmaül Hüsnası',
@@ -231,6 +232,8 @@ export const trCommon = {
     title: 'Namaz Vakitleri',
     daily: 'Günlük',
     monthly: 'Aylık',
+    monthlyCalendar: 'Aylık takvim',
+    nextPrayerLabel: 'Sıradaki vakit',
     method: 'Hesaplama yöntemi',
     methodNames: {
       diyanet: 'Diyanet uyumlu (Türkiye)',

@@ -17,37 +17,43 @@ export interface ThemePalette {
   overlay: string;
 }
 
+/**
+ * Lacivert + altın tema (kullanıcı tasarımı).
+ * dark = "gece" (İmsak/Akşam/Yatsı pencereleri: akşamdan gün doğumuna) — #0F172A zemin, #D4AF37 altın.
+ * light = aynı tasarımın gündüz hâli — açık zemin, lacivert metin, koyu altın vurgu.
+ * Otomatik geçiş use-theme.ts'te vakit hesabıyla yapılır.
+ */
 export const Colors: Record<'light' | 'dark', ThemePalette> = {
   light: {
-    background: '#F7F6F2',
+    background: '#F6F7FA',
     surface: '#FFFFFF',
-    surfaceAlt: '#EFEDE6',
-    text: '#1C1B18',
-    textSecondary: '#6B6A64',
-    primary: '#0E7365',
+    surfaceAlt: '#EDF0F5',
+    text: '#0F172A',
+    textSecondary: '#64748B',
+    primary: '#A8821F',
     onPrimary: '#FFFFFF',
-    primarySoft: '#DCEEEA',
-    accent: '#B08A2E',
-    accentSoft: '#F3EAD3',
-    border: '#E3E1DA',
+    primarySoft: '#F5EBCE',
+    accent: '#B7912A',
+    accentSoft: '#F5EBCE',
+    border: '#E2E8F0',
     danger: '#B3402E',
     success: '#2E7D4F',
-    overlay: 'rgba(0,0,0,0.4)',
+    overlay: 'rgba(15,23,42,0.4)',
   },
   dark: {
-    background: '#12140F',
-    surface: '#1C1F18',
-    surfaceAlt: '#252921',
-    text: '#F0EFE9',
-    textSecondary: '#A3A297',
-    primary: '#3BA694',
-    onPrimary: '#0B1F1B',
-    primarySoft: '#1E332E',
-    accent: '#D4AF5A',
-    accentSoft: '#33301F',
-    border: '#31352B',
-    danger: '#D9705F',
-    success: '#5FB57F',
+    background: '#0F172A',
+    surface: '#182238',
+    surfaceAlt: '#1F2B45',
+    text: '#E2E8F0',
+    textSecondary: '#94A3B8',
+    primary: '#D4AF37',
+    onPrimary: '#0F172A',
+    primarySoft: '#31301E',
+    accent: '#E3C565',
+    accentSoft: '#2C2717',
+    border: '#293650',
+    danger: '#E06C5C',
+    success: '#4CAF82',
     overlay: 'rgba(0,0,0,0.6)',
   },
 };

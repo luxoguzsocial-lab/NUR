@@ -253,6 +253,7 @@ export const ar = {
     prayerTracking: 'متابعة الصلاة',
     qibla: 'القبلة',
     dailyAyah: 'آية اليوم',
+    nightAyah: 'آية الليلة',
     dailyHadith: 'حديث اليوم',
     dailyDua: 'دعاء اليوم',
     dailyEsma: 'اسم اليوم من الأسماء الحسنى',
@@ -274,6 +275,8 @@ export const ar = {
     title: 'مواقيت الصلاة',
     daily: 'يومي',
     monthly: 'شهري',
+    monthlyCalendar: 'التقويم الشهري',
+    nextPrayerLabel: 'الصلاة القادمة',
     method: 'طريقة الحساب',
     methodNames: {
       diyanet: 'وفق رئاسة الشؤون الدينية (تركيا)',

@@ -32,40 +32,44 @@ function pad(n: number): string {
   return String(n).padStart(2, '0');
 }
 
-/** Nokta dizisiyle çizilen yarım daire gün göstergesi (İmsak → Yatsı). */
-function DayArc({
+/**
+ * Tam dairesel halka sayaç (kullanıcı tasarımı): önceki vakitten sıradaki
+ * vakte ilerleme altın noktalarla dolar; merkezde vakit adı ve geri sayım.
+ */
+function RingCountdown({
   fraction,
   label,
+  prayerName,
   countdown,
 }: {
   fraction: number;
   label: string;
+  prayerName: string;
   countdown: string;
 }) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  const size = Math.min(width - Spacing.md * 4, 330);
-  const r = size / 2 - 12;
+  const size = Math.min(width - Spacing.md * 6, 250);
+  const r = size / 2 - 8;
   const cx = size / 2;
   const cy = size / 2;
-  const DOTS = 36;
+  const DOTS = 56;
   const clamped = Math.min(1, Math.max(0, fraction));
 
-  const dots = Array.from({ length: DOTS + 1 }, (_, i) => {
+  // Üstten (saat 12) başlayıp saat yönünde dolar
+  const dots = Array.from({ length: DOTS }, (_, i) => {
     const t = i / DOTS;
-    const angle = Math.PI * (1 - t);
+    const angle = -Math.PI / 2 + t * 2 * Math.PI;
     return {
       x: cx + r * Math.cos(angle),
-      y: cy - r * Math.sin(angle),
+      y: cy + r * Math.sin(angle),
       filled: t <= clamped,
     };
   });
-  const markerAngle = Math.PI * (1 - clamped);
-  const marker = { x: cx + r * Math.cos(markerAngle), y: cy - r * Math.sin(markerAngle) };
 
   return (
     <View style={{ alignItems: 'center' }}>
-      <View style={{ width: size, height: size / 2 + 26 }}>
+      <View style={{ width: size, height: size }}>
         {dots.map((d, i) => (
           <View
             key={i}
@@ -80,59 +84,28 @@ function DayArc({
             }}
           />
         ))}
-        {/* Uç halkaları */}
+        {/* Merkez: sıradaki vakit + geri sayım */}
         <View
           style={{
             position: 'absolute',
-            left: cx - r - 6,
-            top: cy - 6,
-            width: 12,
-            height: 12,
-            borderRadius: 6,
-            backgroundColor: theme.primary,
-          }}
-        />
-        <View
-          style={{
-            position: 'absolute',
-            left: cx + r - 6,
-            top: cy - 6,
-            width: 12,
-            height: 12,
-            borderRadius: 6,
-            borderWidth: 2,
-            borderColor: theme.textSecondary,
-            backgroundColor: 'transparent',
-          }}
-        />
-        {/* Güneş konumu işareti */}
-        <View
-          style={{
-            position: 'absolute',
-            left: marker.x - 11,
-            top: marker.y - 11,
-            width: 22,
-            height: 22,
-            borderRadius: 11,
-            backgroundColor: '#F0A32E',
-            borderWidth: 3,
-            borderColor: 'rgba(240,163,46,0.35)',
-          }}
-        />
-        {/* Merkez: geri sayım */}
-        <View
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            top: size / 6,
+            inset: 0,
             alignItems: 'center',
+            justifyContent: 'center',
             gap: 2,
           }}
         >
-          <ThemedText variant="secondary">{label}</ThemedText>
-          <ThemedText style={{ fontSize: 44, fontWeight: '800', color: theme.text, letterSpacing: 1 }}>
-            {countdown}
+          <ThemedText
+            variant="caption"
+            color={theme.textSecondary}
+            style={{ textTransform: 'uppercase', letterSpacing: 2 }}
+          >
+            {label}
+          </ThemedText>
+          <ThemedText style={{ fontSize: 30, fontWeight: '800', color: theme.text }}>
+            {prayerName}
+          </ThemedText>
+          <ThemedText style={{ fontSize: 24, fontWeight: '700', color: theme.primary, letterSpacing: 1 }}>
+            -{countdown}
           </ThemedText>
         </View>
       </View>
@@ -187,10 +160,36 @@ export default function PrayerTabScreen() {
   const remaining = Math.max(0, nextPrayer.remainingMs);
   const countdown = `${pad(Math.floor(remaining / 3600_000))}:${pad(Math.floor((remaining % 3600_000) / 60_000))}:${pad(Math.floor((remaining % 60_000) / 1000))}`;
 
-  // Yay: imsak → yatsı arası gün ilerlemesi
-  const dayFraction =
-    (now.getTime() - dayTimes.times.fajr.getTime()) /
-    Math.max(1, dayTimes.times.isha.getTime() - dayTimes.times.fajr.getTime());
+  // Halka: önceki vakitten sıradaki vakte ilerleme (güneş, sayımda atlanır)
+  const ringFraction = useMemo(() => {
+    const anchors: PrayerId[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+    const todayTimes = getPrayerTimesForDate(
+      now, location.latitude, location.longitude, calcMethod, madhab, adjustments,
+    ).times;
+    let prev: Date | null = null;
+    for (const p of anchors) {
+      const t = todayTimes[p];
+      if (t.getTime() <= now.getTime() && (!prev || t.getTime() > prev.getTime())) prev = t;
+    }
+    if (!prev) {
+      const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+      prev = getPrayerTimesForDate(
+        yesterday, location.latitude, location.longitude, calcMethod, madhab, adjustments,
+      ).times.isha;
+    }
+    const span = nextPrayer.time.getTime() - prev.getTime();
+    return span > 0 ? (now.getTime() - prev.getTime()) / span : 0;
+  }, [now, location, calcMethod, madhab, adjustments, nextPrayer]);
+
+  // İçinde bulunulan vakit penceresi: bugünün geçmiş vakitlerinden en sonuncusu
+  const currentPrayer = useMemo(() => {
+    if (!isToday) return null;
+    let current: PrayerId | null = null;
+    for (const p of PRAYER_ORDER) {
+      if (dayTimes.times[p].getTime() <= now.getTime()) current = p;
+    }
+    return current;
+  }, [isToday, dayTimes, now]);
 
   const dayRecord = tracker.days[selectedISO] ?? { prayers: {} };
   const prayersDone = TRACKED.filter((p) => dayRecord.prayers[p]).length;
@@ -331,12 +330,13 @@ export default function PrayerTabScreen() {
         </Card>
       ) : (
         <>
-          {/* Yay göstergesi — yalnızca bugün */}
+          {/* Halka sayaç — yalnızca bugün */}
           {isToday ? (
             <Card style={{ marginTop: Spacing.md, paddingVertical: Spacing.lg }}>
-              <DayArc
-                fraction={dayFraction}
-                label={t('home.timeToPrayer', { prayer: t(`prayers.${nextPrayer.prayer}`) })}
+              <RingCountdown
+                fraction={ringFraction}
+                label={t('prayerTimes.nextPrayerLabel')}
+                prayerName={t(`prayers.${nextPrayer.prayer}`)}
                 countdown={countdown}
               />
             </Card>
@@ -380,10 +380,14 @@ export default function PrayerTabScreen() {
             {PRAYER_ORDER.map((p: PrayerId) => {
               const time = dayTimes.times[p];
               const isNext = isToday && p === nextPrayer.prayer;
+              // İçinde bulunulan pencere altın vurgulu (kullanıcı tasarımı);
+              // sıradaki vakit ince altın çerçeveyle belirtilir.
+              const isCurrent = isToday && p === currentPrayer;
               const isPast = isToday && time.getTime() < now.getTime();
               const trackable =
                 settings.trackerEnabled && p !== 'sunrise' && (isPast || isNext) && isToday;
               const done = p !== 'sunrise' && !!dayRecord.prayers[p as TrackedPrayer];
+              const strong = isCurrent || isNext;
               return (
                 <Pressable
                   key={p}
@@ -395,12 +399,12 @@ export default function PrayerTabScreen() {
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: Spacing.md,
-                    backgroundColor: isNext ? theme.primarySoft : theme.surface,
+                    backgroundColor: isCurrent ? theme.primarySoft : theme.surface,
                     borderRadius: Radius.xl,
-                    borderWidth: 1,
-                    borderColor: isNext ? theme.primary : theme.border,
+                    borderWidth: isCurrent ? 1.5 : 1,
+                    borderColor: strong ? theme.primary : theme.border,
                     padding: Spacing.md,
-                    opacity: isPast && !isNext ? 0.75 : 1,
+                    opacity: isPast && !isCurrent ? 0.75 : 1,
                   }}
                 >
                   <View
@@ -408,7 +412,7 @@ export default function PrayerTabScreen() {
                       width: 46,
                       height: 46,
                       borderRadius: 23,
-                      backgroundColor: isNext ? theme.primary : theme.surfaceAlt,
+                      backgroundColor: isCurrent ? theme.primary : theme.surfaceAlt,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
@@ -416,17 +420,17 @@ export default function PrayerTabScreen() {
                     <Ionicons
                       name={PRAYER_ICONS[p]}
                       size={20}
-                      color={isNext ? theme.onPrimary : theme.textSecondary}
+                      color={isCurrent ? theme.onPrimary : theme.textSecondary}
                     />
                   </View>
                   <ThemedText
                     variant="heading"
-                    color={isNext ? theme.primary : theme.text}
+                    color={strong ? theme.primary : theme.text}
                     style={{ flex: 1 }}
                   >
                     {t(`prayers.${p}`)}
                   </ThemedText>
-                  <ThemedText variant="heading" color={isNext ? theme.primary : theme.text}>
+                  <ThemedText variant="heading" color={strong ? theme.primary : theme.text}>
                     {formatTime(time)}
                   </ThemedText>
                   {p !== 'sunrise' && settings.trackerEnabled && isToday ? (
@@ -454,6 +458,29 @@ export default function PrayerTabScreen() {
               );
             })}
           </View>
+
+          {/* Aylık takvim (kullanıcı tasarımı: liste altı geniş buton) */}
+          <Pressable
+            onPress={() => setShowMonthly(true)}
+            accessibilityRole="button"
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: Spacing.sm,
+              marginTop: Spacing.md,
+              paddingVertical: Spacing.md,
+              borderRadius: Radius.xl,
+              borderWidth: 1,
+              borderColor: theme.border,
+              backgroundColor: theme.surface,
+            }}
+          >
+            <Ionicons name="calendar-outline" size={18} color={theme.text} />
+            <ThemedText variant="label" style={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+              {t('prayerTimes.monthlyCalendar')}
+            </ThemedText>
+          </Pressable>
 
           {/* Kaza takibi girişi */}
           <Card style={{ marginTop: Spacing.md }} onPress={() => router.push('/qada')}>

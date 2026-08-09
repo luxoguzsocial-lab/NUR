@@ -176,9 +176,11 @@ export default function HomeScreen() {
     }
   }
 
+  // Lacivert vakit kartı + altın geri sayım (kullanıcı tasarımı)
   const heroText = '#FFFFFF';
-  const heroSub = 'rgba(255,255,255,0.8)';
-  const heroBg = mode === 'dark' ? '#2E8F7C' : '#22A188';
+  const heroSub = 'rgba(226,232,240,0.75)';
+  const heroBg = mode === 'dark' ? '#1B2440' : '#0F172A';
+  const heroGold = '#D4AF37';
 
   const shareAyah = () =>
     void shareText(`${daily.ayah.arabic ? daily.ayah.arabic + '\n\n' : ''}${daily.ayah.text}\n— ${daily.ayah.source} · NUR`,);
@@ -272,7 +274,7 @@ export default function HomeScreen() {
               {t('home.timeToPrayer', { prayer: t(`prayers.${nextPrayer.prayer}`) })}
             </ThemedText>
             <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-              <ThemedText color={heroText} style={{ fontSize: 76, fontWeight: '800', letterSpacing: 2 }}>
+              <ThemedText color={heroGold} style={{ fontSize: 76, fontWeight: '800', letterSpacing: 2 }}>
                 {pad(remH)}:{pad(remM)}
               </ThemedText>
               <ThemedText color={heroSub} style={{ fontSize: 34, fontWeight: '700' }}>
@@ -292,6 +294,42 @@ export default function HomeScreen() {
               </ThemedText>
             </View>
           </Pressable>
+
+          {/* Günlük hedef çubuğu (kullanıcı tasarımı): bugün işaretlenen namazlar */}
+          <View style={{ marginTop: Spacing.md }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 6,
+              }}
+            >
+              <ThemedText variant="caption" color={heroSub}>
+                {t('home.dailyGoal')}
+              </ThemedText>
+              <ThemedText variant="caption" color={heroGold} style={{ fontWeight: '700' }}>
+                %{Math.round((prayersDone / TRACKED.length) * 100)}
+              </ThemedText>
+            </View>
+            <View
+              style={{
+                height: 5,
+                borderRadius: 3,
+                backgroundColor: 'rgba(255,255,255,0.18)',
+                overflow: 'hidden',
+              }}
+            >
+              <View
+                style={{
+                  width: `${Math.round((prayersDone / TRACKED.length) * 100)}%`,
+                  height: '100%',
+                  borderRadius: 3,
+                  backgroundColor: heroGold,
+                }}
+              />
+            </View>
+          </View>
 
           {/* Vakit şeridi */}
           <View
@@ -636,8 +674,11 @@ export default function HomeScreen() {
           </View>
         </Card>
 
-        {/* Günün Ayeti — altın kart, Arapça metinli */}
-        <SectionHeader title={t('home.dailyAyah')} onSeeAll={() => router.push('/daily')} />
+        {/* Günün/Gecenin Ayeti — altın kart, Arapça metinli */}
+        <SectionHeader
+          title={t(mode === 'dark' ? 'home.nightAyah' : 'home.dailyAyah')}
+          onSeeAll={() => router.push('/daily')}
+        />
         <View
           style={{
             borderRadius: Radius.xl,
