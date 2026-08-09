@@ -12,6 +12,7 @@ import { applyLanguage } from '@/i18n';
 import { syncPrayerNotifications } from '@/lib/notifications';
 import i18nInstance from '@/i18n';
 import { useSettingsStore } from '@/store/settings';
+import { syncIosWidget } from '@/widgets/ios-widget-data';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -32,8 +33,25 @@ export default function RootLayout() {
         names[p] = i18nInstance.t('prayers.' + p);
       }
       void syncPrayerNotifications(s, names, i18nInstance.t('common.appName'));
+      // iOS ana ekran widget'ına günün/yarının vakitlerini yaz
+      syncIosWidget(s);
     }
   }, [hydrated, language]);
+
+  // Konum / hesap yöntemi değişince iOS widget verisini tazele
+  useEffect(() => {
+    if (!hydrated) return;
+    return useSettingsStore.subscribe((s, prev) => {
+      if (
+        s.location !== prev.location ||
+        s.calcMethod !== prev.calcMethod ||
+        s.madhab !== prev.madhab ||
+        s.adjustments !== prev.adjustments
+      ) {
+        syncIosWidget(s);
+      }
+    });
+  }, [hydrated]);
 
   if (!hydrated) return null;
 

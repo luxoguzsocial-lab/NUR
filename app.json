@@ -8,11 +8,16 @@
     "scheme": "nur",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.nurapp.mobile",
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.nurapp.mobile"]
+      }
     },
     "android": {
+      "package": "com.nurapp.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#0E7365",
+        "backgroundColor": "#0F172A",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -24,11 +29,12 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "@bacons/apple-targets",
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0E7365",
+          "backgroundColor": "#0F172A",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
@@ -60,9 +66,9 @@
               "label": "NUR — Vakit",
               "description": "Sıradaki namaz vakti ve kalan süre",
               "minWidth": "250dp",
-              "minHeight": "60dp",
+              "minHeight": "110dp",
               "targetCellWidth": 4,
-              "targetCellHeight": 1,
+              "targetCellHeight": 2,
               "updatePeriodMillis": 1800000
             }
           ]
