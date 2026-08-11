@@ -13,7 +13,9 @@ export type VideoCategory =
   | 'ahlak'
   | 'gencler'
   | 'ramazan'
-  | 'kuran';
+  | 'kuran'
+  | 'dua'
+  | 'aile';
 
 export type AgeGroup = 'genel' | 'genc' | 'cocuk';
 
@@ -516,6 +518,105 @@ export const VIDEOS: VideoItem[] = [
     moderationStatus: 'approved',
     thumbnailHue: 240,
   },
+  {
+    id: 'v19',
+    title: 'Dua: Kulluğun özü',
+    description: 'Duanın anlamı, gücü ve hayatın her anına yayılması üzerine kısa bir hatırlatma.',
+    media: require('../../assets/videos/v19.mp4') as number,
+    creator: creator('c1'),
+    category: 'dua',
+    durationSec: 110,
+    ageGroup: 'genel',
+    kidFriendly: true,
+    sources: [
+      { kind: 'ayah', reference: 'Mü\'min 40:60', text: 'Rabbiniz şöyle buyurdu: Bana dua edin, size karşılık vereyim.', verified: true },
+      { kind: 'hadith', reference: 'Tirmizî, Deavât 1', text: 'Dua, ibadetin özüdür.', verified: true },
+    ],
+    relatedVideoIds: ['v13'],
+    relatedLessonIds: [],
+    subtitles: [
+      'Dua, kulun Rabbiyle aracısız konuşmasıdır.',
+      'Mü\'min suresi 60: Bana dua edin, size karşılık vereyim.',
+      'Peygamberimiz duayı ibadetin özü sayar.',
+      'Bugün bir işe başlarken kısa bir dua ile başlayın.',
+    ],
+    moderationStatus: 'approved',
+    thumbnailHue: 45,
+  },
+  {
+    id: 'v20',
+    title: 'Sabah ve akşam zikirleri',
+    description: 'Güne zikirle başlamanın ve günü zikirle kapatmanın bereketi.',
+    media: require('../../assets/videos/v20.mp4') as number,
+    creator: creator('c3'),
+    category: 'dua',
+    durationSec: 105,
+    ageGroup: 'genel',
+    kidFriendly: true,
+    sources: [
+      { kind: 'ayah', reference: 'Ahzâb 33:41-42', text: 'Ey iman edenler! Allah\'ı çokça zikredin ve O\'nu sabah akşam tesbih edin.', verified: true },
+    ],
+    relatedVideoIds: ['v19'],
+    relatedLessonIds: [],
+    subtitles: [
+      'Gün, zikirle açılınca bereketlenir.',
+      'Ahzâb 41-42: Allah\'ı çokça anın; sabah akşam tesbih edin.',
+      'Sabah ve akşam zikirleri günün koruyucu kalkanıdır.',
+      'Uygulamadaki Zikir sekmesinden bugün başlayabilirsiniz.',
+    ],
+    moderationStatus: 'approved',
+    thumbnailHue: 25,
+  },
+  {
+    id: 'v21',
+    title: 'Aile: Rahmet yuvası',
+    description: 'Eşler arasındaki sevgi ve merhametin Kur\'an\'daki yeri, huzurlu yuvanın temelleri.',
+    media: require('../../assets/videos/v21.mp4') as number,
+    creator: creator('c4'),
+    category: 'aile',
+    durationSec: 110,
+    ageGroup: 'genel',
+    kidFriendly: true,
+    sources: [
+      { kind: 'ayah', reference: 'Rûm 30:21', text: 'Kendileriyle huzur bulasınız diye size kendi türünüzden eşler yaratması ve aranıza sevgi ve merhamet koyması O\'nun varlığının delillerindendir.', verified: true },
+      { kind: 'hadith', reference: 'Tirmizî, Menâkıb 63', text: 'Sizin en hayırlınız, ailesine karşı en hayırlı olanınızdır.', verified: true },
+    ],
+    relatedVideoIds: ['v14'],
+    relatedLessonIds: [],
+    subtitles: [
+      'Aile, sevgi ve merhamet üzerine kurulan bir yuvadır.',
+      'Rûm suresi 21: aranıza sevgi ve merhamet koydu.',
+      'En hayırlınız, ailesine hayırlı olandır buyurur Peygamberimiz.',
+      'Bu akşam sofrayı birlikte kurmayı deneyin.',
+    ],
+    moderationStatus: 'approved',
+    thumbnailHue: 15,
+  },
+  {
+    id: 'v22',
+    title: 'Sıla-i rahim: Akrabayı gözetmek',
+    description: 'Akrabalık bağlarını canlı tutmanın fazileti ve pratik yolları.',
+    media: require('../../assets/videos/v22.mp4') as number,
+    creator: creator('c1'),
+    category: 'aile',
+    durationSec: 100,
+    ageGroup: 'genel',
+    kidFriendly: true,
+    sources: [
+      { kind: 'ayah', reference: 'Nisâ 4:1', text: 'Adını anarak birbirinizden dilek ve istekte bulunduğunuz Allah\'a saygısızlıktan ve akrabalık haklarına riayetsizlikten sakının.', verified: true },
+      { kind: 'hadith', reference: 'Buhârî, Edeb 12', text: 'Rızkının genişletilmesini ve ömrünün uzatılmasını isteyen, akrabasını görüp gözetsin.', verified: true },
+    ],
+    relatedVideoIds: ['v21', 'v14'],
+    relatedLessonIds: [],
+    subtitles: [
+      'Akrabalık bağı, Kur\'an\'da Allah\'a saygıyla birlikte anılır.',
+      'Sıla-i rahim rızkı genişletir, ömrü bereketlendirir.',
+      'Uzak kalmış bir akrabanızı bugün arayın.',
+      'Küçük bir ziyaret, büyük bir gönül köprüsüdür.',
+    ],
+    moderationStatus: 'approved',
+    thumbnailHue: 35,
+  },
 ];
 
 export function getVideo(id: string): VideoItem | undefined {
@@ -530,4 +631,6 @@ export const VIDEO_CATEGORIES: { id: VideoCategory; labelTr: string }[] = [
   { id: 'gencler', labelTr: 'Gençler & Çocuklar' },
   { id: 'ramazan', labelTr: 'Ramazan' },
   { id: 'kuran', labelTr: "Kur'an" },
+  { id: 'dua', labelTr: 'Dua' },
+  { id: 'aile', labelTr: 'Aile' },
 ];

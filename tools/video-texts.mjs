@@ -176,6 +176,46 @@ export const VIDEO_TEXTS = {
     speech:
       'Selam, iki kalp arasındaki en kısa köprüdür. Nisâ suresi seksen altıncı ayet: selama daha güzeliyle karşılık verin. Selamı yaymak, sevginin ve imanın alametidir. Bugün tanımadığınız bir komşuya önce siz selam verin.',
   },
+  v19: {
+    lines: [
+      'Dua, kulun Rabbiyle aracısız konuşmasıdır.',
+      'Mü\'min suresi 60: Bana dua edin, size karşılık vereyim.',
+      'Peygamberimiz duayı ibadetin özü sayar.',
+      'Bugün bir işe başlarken kısa bir dua ile başlayın.',
+    ],
+    speech:
+      'Dua, kulun Rabbiyle aracısız konuşmasıdır. Mü\'min suresi altmışıncı ayette Rabbimiz buyurur: Bana dua edin, size karşılık vereyim. Peygamberimiz duayı ibadetin özü sayar. Bugün bir işe başlarken kısa bir dua ile başlayın.',
+  },
+  v20: {
+    lines: [
+      'Gün, zikirle açılınca bereketlenir.',
+      'Ahzâb 41-42: Allah\'ı çokça anın; sabah akşam tesbih edin.',
+      'Sabah ve akşam zikirleri günün koruyucu kalkanıdır.',
+      'Uygulamadaki Zikir sekmesinden bugün başlayabilirsiniz.',
+    ],
+    speech:
+      'Gün, zikirle açılınca bereketlenir. Ahzâb suresi kırk bir ve kırk ikinci ayetler: Allah\'ı çokça anın; sabah akşam tesbih edin. Sabah ve akşam zikirleri günün koruyucu kalkanıdır. Uygulamadaki Zikir sekmesinden bugün başlayabilirsiniz.',
+  },
+  v21: {
+    lines: [
+      'Aile, sevgi ve merhamet üzerine kurulan bir yuvadır.',
+      'Rûm suresi 21: aranıza sevgi ve merhamet koydu.',
+      'En hayırlınız, ailesine hayırlı olandır buyurur Peygamberimiz.',
+      'Bu akşam sofrayı birlikte kurmayı deneyin.',
+    ],
+    speech:
+      'Aile, sevgi ve merhamet üzerine kurulan bir yuvadır. Rûm suresi yirmi birinci ayet der ki: aranıza sevgi ve merhamet koydu. En hayırlınız, ailesine hayırlı olandır buyurur Peygamberimiz. Bu akşam sofrayı birlikte kurmayı deneyin.',
+  },
+  v22: {
+    lines: [
+      'Akrabalık bağı, Kur\'an\'da Allah\'a saygıyla birlikte anılır.',
+      'Sıla-i rahim rızkı genişletir, ömrü bereketlendirir.',
+      'Uzak kalmış bir akrabanızı bugün arayın.',
+      'Küçük bir ziyaret, büyük bir gönül köprüsüdür.',
+    ],
+    speech:
+      'Akrabalık bağı, Kur\'an\'da Allah\'a saygıyla birlikte anılır. Sıla-i rahim rızkı genişletir, ömrü bereketlendirir. Uzak kalmış bir akrabanızı bugün arayın. Küçük bir ziyaret, büyük bir gönül köprüsüdür.',
+  },
   v18: {
     lines: [
       'Gece, dünyanın sustuğu ve kalbin konuştuğu vakittir.',
