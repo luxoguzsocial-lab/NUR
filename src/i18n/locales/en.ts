@@ -344,7 +344,6 @@ export const en = {
     method: 'Calculation method',
     methodNames: {
       diyanet: 'Diyanet-compatible (Turkey)',
-      mwl: 'Muslim World League',
       ummalqura: 'Umm al-Qura (Makkah)',
       isna: 'ISNA (North America)',
     },

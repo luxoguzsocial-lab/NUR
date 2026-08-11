@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type Language = 'tr' | 'en' | 'ar';
 export type ThemePref = 'system' | 'light' | 'dark';
-export type CalcMethodId = 'diyanet' | 'mwl' | 'ummalqura' | 'isna';
+export type CalcMethodId = 'diyanet' | 'ummalqura' | 'isna';
 export type MadhabId = 'hanafi' | 'shafi';
 export type PrayerId = 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 

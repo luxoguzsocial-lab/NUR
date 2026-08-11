@@ -41,14 +41,14 @@ describe('getPrayerTimesForDate', () => {
     expect(adjusted.times.fajr.getTime() - base.times.fajr.getTime()).toBe(5 * 60_000);
   });
 
-  it('farklı yöntemler farklı imsak üretebilir (MWL vs Umm al-Qura)', () => {
-    const mwl = getPrayerTimesForDate(date, IST.lat, IST.lon, 'mwl', 'shafi', NO_ADJUST);
+  it('farklı yöntemler farklı imsak üretebilir (ISNA vs Umm al-Qura)', () => {
+    const isna = getPrayerTimesForDate(date, IST.lat, IST.lon, 'isna', 'shafi', NO_ADJUST);
     const uq = getPrayerTimesForDate(date, IST.lat, IST.lon, 'ummalqura', 'shafi', NO_ADJUST);
-    expect(mwl.times.fajr.getTime()).not.toBe(uq.times.fajr.getTime());
+    expect(isna.times.fajr.getTime()).not.toBe(uq.times.fajr.getTime());
   });
 
   it('güney yarımkürede de çalışır (Cakarta)', () => {
-    const { times } = getPrayerTimesForDate(date, -6.2088, 106.8456, 'mwl', 'shafi', NO_ADJUST);
+    const { times } = getPrayerTimesForDate(date, -6.2088, 106.8456, 'ummalqura', 'shafi', NO_ADJUST);
     expect(times.maghrib.getTime()).toBeGreaterThan(times.dhuhr.getTime());
   });
 });

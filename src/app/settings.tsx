@@ -31,7 +31,7 @@ import { useTasbihStore } from '@/store/tasbih';
 import { useTrackerStore } from '@/store/tracker';
 import { useTravelStore } from '@/store/travel';
 
-const METHODS: CalcMethodId[] = ['diyanet', 'mwl', 'ummalqura', 'isna'];
+const METHODS: CalcMethodId[] = ['diyanet', 'ummalqura', 'isna'];
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (

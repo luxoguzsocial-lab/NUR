@@ -283,7 +283,6 @@ export const trCommon = {
     method: 'Hesaplama yöntemi',
     methodNames: {
       diyanet: 'Diyanet uyumlu (Türkiye)',
-      mwl: 'Muslim World League',
       ummalqura: 'Umm al-Qura (Mekke)',
       isna: 'ISNA (Kuzey Amerika)',
     },

@@ -28,8 +28,6 @@ export function calculationParams(methodId: CalcMethodId, madhab: MadhabId): Cal
     switch (methodId) {
       case 'diyanet':
         return CalculationMethod.Turkey();
-      case 'mwl':
-        return CalculationMethod.MuslimWorldLeague();
       case 'ummalqura':
         return CalculationMethod.UmmAlQura();
       case 'isna':
