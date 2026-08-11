@@ -18,27 +18,27 @@ export interface ThemePalette {
 }
 
 /**
- * Lacivert + altın tema (kullanıcı tasarımı).
- * dark = "gece" (İmsak/Akşam/Yatsı pencereleri: akşamdan gün doğumuna) — #0F172A zemin, #D4AF37 altın.
- * light = aynı tasarımın gündüz hâli — açık zemin, lacivert metin, koyu altın vurgu.
+ * Tema (kullanıcı seçimi):
+ * dark = "gece" (Akşam→Güneş; İmsak/Akşam/Yatsı pencereleri) — lacivert #0F172A + altın #D4AF37.
+ * light = gündüz — klasik yeşil/turkuaz tema (krem zemin, #0E7365 yeşil).
  * Otomatik geçiş use-theme.ts'te vakit hesabıyla yapılır.
  */
 export const Colors: Record<'light' | 'dark', ThemePalette> = {
   light: {
-    background: '#F6F7FA',
+    background: '#F7F6F2',
     surface: '#FFFFFF',
-    surfaceAlt: '#EDF0F5',
-    text: '#0F172A',
-    textSecondary: '#64748B',
-    primary: '#A8821F',
+    surfaceAlt: '#EFEDE6',
+    text: '#1C1B18',
+    textSecondary: '#6B6A64',
+    primary: '#0E7365',
     onPrimary: '#FFFFFF',
-    primarySoft: '#F5EBCE',
-    accent: '#B7912A',
-    accentSoft: '#F5EBCE',
-    border: '#E2E8F0',
+    primarySoft: '#DCEEEA',
+    accent: '#B08A2E',
+    accentSoft: '#F3EAD3',
+    border: '#E3E1DA',
     danger: '#B3402E',
     success: '#2E7D4F',
-    overlay: 'rgba(15,23,42,0.4)',
+    overlay: 'rgba(0,0,0,0.4)',
   },
   dark: {
     background: '#0F172A',

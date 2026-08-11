@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { todayISO } from '@/lib/format';
+import { isPrivateWorshipExemptDate, usePrivateWorshipStore } from '@/store/private-worship';
 import type { PrayerId } from '@/store/settings';
 
 export type TrackedPrayer = Exclude<PrayerId, 'sunrise'>;
@@ -47,6 +49,15 @@ export const useTrackerStore = create<TrackerState>()(
       decrementQadaFasting: () => set((s) => ({ qadaFasting: Math.max(0, s.qadaFasting - 1) })),
       togglePrayer: (dateISO, prayer) =>
         set((s) => {
+          if (
+            isPrivateWorshipExemptDate(
+              usePrivateWorshipStore.getState(),
+              dateISO,
+              todayISO(),
+            )
+          ) {
+            return s;
+          }
           const day = s.days[dateISO] ?? { prayers: {} };
           return {
             days: {

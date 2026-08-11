@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -16,6 +17,7 @@ import { confirmDialog } from '@/lib/dialogs';
 import { applyLanguage } from '@/i18n';
 import { useAiStore, useMediaStore } from '@/store/media';
 import { useNotificationStore } from '@/store/notifications';
+import { isPrivateWorshipActive, usePrivateWorshipStore } from '@/store/private-worship';
 import { useProgressStore } from '@/store/progress';
 import { useSavedStore } from '@/store/saved';
 import {
@@ -27,6 +29,7 @@ import {
 } from '@/store/settings';
 import { useTasbihStore } from '@/store/tasbih';
 import { useTrackerStore } from '@/store/tracker';
+import { useTravelStore } from '@/store/travel';
 
 const METHODS: CalcMethodId[] = ['diyanet', 'mwl', 'ummalqura', 'isna', 'egyptian', 'karachi'];
 
@@ -51,6 +54,8 @@ export default function SettingsScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const settings = useSettingsStore();
+  const privateWorship = usePrivateWorshipStore();
+  const travel = useTravelStore();
   const ai = useAiStore();
   const [exported, setExported] = useState(false);
   const [aiCleared, setAiCleared] = useState(false);
@@ -82,9 +87,10 @@ export default function SettingsScreen() {
           useAiStore.getState().clearHistory();
           useMediaStore.getState().clearHistory();
           useNotificationStore.getState().clearAll();
+          usePrivateWorshipStore.getState().resetAll();
+          useTravelStore.getState().resetAll();
           settings.resetAll();
-          void AsyncStorage.clear();
-          router.replace('/onboarding');
+          void AsyncStorage.clear().then(() => router.replace('/onboarding'));
         }, t('common.cancel'));
   };
 
@@ -110,6 +116,37 @@ export default function SettingsScreen() {
           {t('settings.rtlNote')}
         </ThemedText>
       ) : null}
+
+      <SectionHeader title={t('settings.smartModes')} />
+      <View style={{ gap: Spacing.sm }}>
+        {/* Cinsiyet onboarding'de sorulur; erkek seçildiyse bu giriş görünmez */}
+        {settings.gender !== 'male' ? (
+        <Card onPress={() => router.push('/private-worship')}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
+            <Ionicons name="shield-checkmark-outline" size={21} color={theme.primary} />
+            <View style={{ flex: 1 }}>
+              <ThemedText variant="label">{t('privateWorship.title')}</ThemedText>
+              <ThemedText variant="caption">
+                {t(isPrivateWorshipActive(privateWorship) ? 'privateWorship.activeTitle' : 'privateWorship.localOnly')}
+              </ThemedText>
+            </View>
+            <Ionicons name="chevron-forward" size={17} color={theme.textSecondary} />
+          </View>
+        </Card>
+        ) : null}
+        <Card onPress={() => router.push('/travel')}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
+            <Ionicons name="airplane-outline" size={21} color={theme.primary} />
+            <View style={{ flex: 1 }}>
+              <ThemedText variant="label">{t('travel.title')}</ThemedText>
+              <ThemedText variant="caption">
+                {t(travel.active ? 'travel.activeTitle' : 'travel.inactiveBody')}
+              </ThemedText>
+            </View>
+            <Ionicons name="chevron-forward" size={17} color={theme.textSecondary} />
+          </View>
+        </Card>
+      </View>
 
       <SectionHeader title={t('settings.theme')} />
       <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
@@ -221,6 +258,24 @@ export default function SettingsScreen() {
             ))}
           </View>
         </Row>
+      </Card>
+
+      {/* Yumuşak devamlılık */}
+      <SectionHeader title={t('settings.gentleJourney')} />
+      <Card>
+        <Row label={t('settings.weeklyJourneyGoal')}>
+          <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
+            {[3, 4, 5].map((days) => (
+              <Chip
+                key={days}
+                label={`${days} ${t('home.consistency.days')}`}
+                selected={settings.weeklyJourneyGoalDays === days}
+                onPress={() => settings.set('weeklyJourneyGoalDays', days)}
+              />
+            ))}
+          </View>
+        </Row>
+        <ThemedText variant="caption">{t('settings.weeklyJourneyInfo')}</ThemedText>
       </Card>
 
       {/* Kur'an görünümü */}

@@ -44,10 +44,17 @@ export interface QuranPrefs {
   reciter: string;
 }
 
+export type Gender = 'female' | 'male' | 'unspecified';
+
 export interface SettingsState {
   onboardingCompleted: boolean;
   /** İsteğe bağlı kullanıcı adı — yalnızca selamlamada kullanılır, cihazda kalır */
   userName: string;
+  /**
+   * Onboarding'de sorulur; kadınlara özel özelliklerin (özel ibadet dönemi)
+   * görünürlüğünü belirler. Yalnızca cihazda tutulur.
+   */
+  gender: Gender;
   language: Language;
   theme: ThemePref;
   location: LocationSetting;
@@ -68,6 +75,8 @@ export interface SettingsState {
   dailyQuranGoalMinutes: number;
   dailyMemorizationGoalAyahs: number;
   dailyWatchReminderMinutes: number;
+  /** Baskisiz haftalik devam hedefi (1-7 gun). */
+  weeklyJourneyGoalDays: number;
 
   set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
   setNotification: <K extends keyof NotificationPrefs>(key: K, value: NotificationPrefs[K]) => void;
@@ -87,6 +96,7 @@ const DEFAULT_LOCATION: LocationSetting = {
 const DEFAULTS = {
   onboardingCompleted: false,
   userName: '',
+  gender: 'unspecified' as Gender,
   language: 'tr' as Language,
   theme: 'system' as ThemePref,
   location: DEFAULT_LOCATION,
@@ -127,6 +137,7 @@ const DEFAULTS = {
   dailyQuranGoalMinutes: 10,
   dailyMemorizationGoalAyahs: 1,
   dailyWatchReminderMinutes: 30,
+  weeklyJourneyGoalDays: 4,
 };
 
 export const useSettingsStore = create<SettingsState>()(

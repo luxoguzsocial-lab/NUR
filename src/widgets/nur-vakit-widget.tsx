@@ -6,7 +6,7 @@ export interface WidgetPrayerRow {
   isNext: boolean;
 }
 
-/** Uygulamadaki lacivert+altın temanın widget karşılığı (gece/gündüz). */
+/** Uygulama temasının widget karşılığı: gece lacivert+altın, gündüz klasik yeşil. */
 const PALETTES = {
   night: {
     gradientFrom: '#1B2440',
@@ -26,18 +26,18 @@ const PALETTES = {
   },
   day: {
     gradientFrom: '#FFFFFF',
-    gradientTo: '#EDF0F5',
-    header: '#64748B',
-    title: '#0F172A',
-    remaining: '#64748B',
-    time: '#A8821F',
-    progressFill: '#B7912A',
-    progressTrack: 'rgba(15,23,42,0.12)',
-    rowLabel: '#8A94A6',
-    rowTime: '#334155',
-    nextChipBg: '#0F172A14',
-    nextLabel: '#7A6415',
-    nextTime: '#0F172A',
+    gradientTo: '#EFEDE6',
+    header: '#6B6A64',
+    title: '#1C1B18',
+    remaining: '#6B6A64',
+    time: '#0E7365',
+    progressFill: '#0E7365',
+    progressTrack: 'rgba(28,27,24,0.12)',
+    rowLabel: '#8B8A82',
+    rowTime: '#3C3B36',
+    nextChipBg: '#0E736518',
+    nextLabel: '#0A5B50',
+    nextTime: '#0E7365',
     symbol: '☀',
   },
 } as const;

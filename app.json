@@ -70,6 +70,16 @@
               "targetCellWidth": 4,
               "targetCellHeight": 2,
               "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "NurBugun",
+              "label": "NUR — Bugün",
+              "description": "Sıradaki vakit, günlük yolculuk ve haftalık devamlılık",
+              "minWidth": "110dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 1800000
             }
           ]
         }

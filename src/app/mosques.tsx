@@ -16,6 +16,7 @@ import { formatTime } from '@/lib/format';
 import { findNearbyMosques, mapsUrl, type Mosque } from '@/lib/mosques';
 import { getPrayerTimesForDate } from '@/lib/prayer-times';
 import { useSettingsStore, type PrayerId } from '@/store/settings';
+import { useTravelStore } from '@/store/travel';
 
 const CONGREGATION_PRAYERS: PrayerId[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 const RADII = [1, 3, 5, 10];
@@ -76,13 +77,17 @@ export default function MosquesScreen() {
         longitude: pos.coords.longitude,
       }).catch(() => []);
       const place = places[0];
-      setSetting('location', {
+      const observedLocation = {
         mode: 'auto',
         latitude: pos.coords.latitude,
         longitude: pos.coords.longitude,
         cityName: place?.city ?? place?.region ?? location.cityName,
         districtName: place?.district ?? place?.subregion ?? undefined,
-      });
+      } as const;
+      if (useTravelStore.getState().active) {
+        useTravelStore.getState().activate(location, observedLocation);
+      }
+      setSetting('location', observedLocation);
     } catch {
       // konum alınamadı — mevcut ayar konumuyla devam
     } finally {

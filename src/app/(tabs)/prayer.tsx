@@ -12,8 +12,8 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDateShort, formatTime, todayISO } from '@/lib/format';
 import { formatHijri, toHijri } from '@/lib/hijri';
-import { syncPrayerNotifications } from '@/lib/notifications';
 import { getMonthlyPrayerTimes, getNextPrayer, getPrayerTimesForDate, PRAYER_ORDER } from '@/lib/prayer-times';
+import { isPrivateWorshipExemptDate, usePrivateWorshipStore } from '@/store/private-worship';
 import { useSettingsStore, type PrayerId } from '@/store/settings';
 import { useTrackerStore, type TrackedPrayer } from '@/store/tracker';
 
@@ -118,6 +118,7 @@ export default function PrayerTabScreen() {
   const theme = useTheme();
   const settings = useSettingsStore();
   const tracker = useTrackerStore();
+  const privateWorship = usePrivateWorshipStore();
   const [now, setNow] = useState(() => new Date());
   const [dayOffset, setDayOffset] = useState(0);
   const [showMonthly, setShowMonthly] = useState(false);
@@ -129,20 +130,13 @@ export default function PrayerTabScreen() {
 
   const { location, calcMethod, madhab, adjustments, language, notifications } = settings;
 
-  // Ayarlar değişince OS bildirim planını tazele
-  useEffect(() => {
-    const names: Record<string, string> = {};
-    for (const p of PRAYER_ORDER) names[p] = t(`prayers.${p}`);
-    void syncPrayerNotifications(settings, names, t('common.appName'));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location, calcMethod, madhab, adjustments, notifications]);
-
   const selectedDate = useMemo(
     () => new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset),
     [now, dayOffset],
   );
   const isToday = dayOffset === 0;
   const selectedISO = todayISO(selectedDate);
+  const selectedExempt = isPrivateWorshipExemptDate(privateWorship, selectedISO, todayISO(now));
   const hijri = toHijri(selectedDate);
 
   const dayTimes = useMemo(
@@ -344,7 +338,11 @@ export default function PrayerTabScreen() {
 
           {/* Bugünkü namaz özeti */}
           {isToday && settings.trackerEnabled ? (
-            <Card style={{ marginTop: Spacing.sm }} onPress={() => router.push('/tracker')}>
+            <Card
+              tone={selectedExempt ? 'accent' : 'surface'}
+              style={{ marginTop: Spacing.sm }}
+              onPress={() => router.push(selectedExempt ? '/private-worship' : '/tracker')}
+            >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
                 <View
                   style={{
@@ -356,17 +354,23 @@ export default function PrayerTabScreen() {
                     justifyContent: 'center',
                   }}
                 >
-                  <ThemedText variant="label" color={theme.primary}>
-                    {prayersDone}
-                    <ThemedText variant="caption" color={theme.primary}>
-                      /5
+                  {selectedExempt ? (
+                    <Ionicons name="pause" size={22} color={theme.accent} />
+                  ) : (
+                    <ThemedText variant="label" color={theme.primary}>
+                      {prayersDone}
+                      <ThemedText variant="caption" color={theme.primary}>/5</ThemedText>
                     </ThemedText>
-                  </ThemedText>
+                  )}
                 </View>
                 <View style={{ flex: 1 }}>
-                  <ThemedText variant="label">{t('prayerTimes.todayPrayerLabel')}</ThemedText>
+                  <ThemedText variant="label">
+                    {t(selectedExempt ? 'privateWorship.trackingPaused' : 'prayerTimes.todayPrayerLabel')}
+                  </ThemedText>
                   <ThemedText variant="caption">
-                    {prayersDone === TRACKED.length
+                    {selectedExempt
+                      ? t('privateWorship.consistencyProtected')
+                      : prayersDone === TRACKED.length
                       ? t('prayerTimes.todayAllDone')
                       : t('prayerTimes.todayPrayerHint')}
                   </ThemedText>
@@ -385,7 +389,7 @@ export default function PrayerTabScreen() {
               const isCurrent = isToday && p === currentPrayer;
               const isPast = isToday && time.getTime() < now.getTime();
               const trackable =
-                settings.trackerEnabled && p !== 'sunrise' && (isPast || isNext) && isToday;
+                settings.trackerEnabled && !selectedExempt && p !== 'sunrise' && (isPast || isNext) && isToday;
               const done = p !== 'sunrise' && !!dayRecord.prayers[p as TrackedPrayer];
               const strong = isCurrent || isNext;
               return (
@@ -448,7 +452,7 @@ export default function PrayerTabScreen() {
                       }}
                     >
                       <Ionicons
-                        name="checkmark"
+                        name={selectedExempt ? 'pause' : 'checkmark'}
                         size={16}
                         color={done ? theme.onPrimary : theme.textSecondary}
                       />

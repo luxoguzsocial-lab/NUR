@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, useGlobalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -9,8 +9,11 @@ export default function TabsLayout() {
   const { t } = useTranslation();
   const theme = useTheme();
   const onboardingCompleted = useSettingsStore((s) => s.onboardingCompleted);
+  const { preview } = useGlobalSearchParams<{ preview?: string }>();
 
-  if (!onboardingCompleted) return <Redirect href="/onboarding" />;
+  // Cihaz demo sayfasındaki canlı ana ekran, kullanıcının gerçek onboarding
+  // durumunu değiştirmeden varsayılan verilerle görüntülenebilir.
+  if (!onboardingCompleted && preview !== '1') return <Redirect href="/onboarding" />;
 
   return (
     <Tabs

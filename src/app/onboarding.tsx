@@ -25,6 +25,7 @@ type Step =
   | 'welcome'
   | 'intro'
   | 'language'
+  | 'profile'
   | 'location'
   | 'method'
   | 'notifications'
@@ -35,6 +36,7 @@ const STEPS: Step[] = [
   'welcome',
   'intro',
   'language',
+  'profile',
   'location',
   'method',
   'notifications',
@@ -184,7 +186,7 @@ export default function OnboardingScreen() {
   const [locationError, setLocationError] = useState(false);
 
   const stepIndex = STEPS.indexOf(step);
-  const heroBg = mode === 'dark' ? '#1B2440' : '#0F172A';
+  const heroBg = mode === 'dark' ? '#1B2440' : '#22A188';
 
   const next = () => {
     const n = STEPS[stepIndex + 1];
@@ -454,6 +456,39 @@ export default function OnboardingScreen() {
             {settings.language === 'ar' ? (
               <ThemedText variant="caption">{t('settings.rtlNote')}</ThemedText>
             ) : null}
+          </View>
+        )}
+
+        {step === 'profile' && (
+          <View style={{ flex: 1, justifyContent: 'center', gap: Spacing.sm }}>
+            <ThemedText variant="title">{t('onboarding.genderTitle')}</ThemedText>
+            <ThemedText variant="secondary" style={{ marginBottom: Spacing.md }}>
+              {t('onboarding.genderSubtitle')}
+            </ThemedText>
+            <OptionCard
+              icon="female"
+              title={t('onboarding.genderFemale')}
+              subtitle={t('onboarding.genderFemaleInfo')}
+              selected={settings.gender === 'female'}
+              onPress={() => settings.set('gender', 'female')}
+            />
+            <OptionCard
+              icon="male"
+              title={t('onboarding.genderMale')}
+              subtitle={t('onboarding.genderMaleInfo')}
+              selected={settings.gender === 'male'}
+              onPress={() => settings.set('gender', 'male')}
+            />
+            <OptionCard
+              icon="remove-circle-outline"
+              title={t('onboarding.genderSkip')}
+              subtitle={t('onboarding.genderSkipInfo')}
+              selected={settings.gender === 'unspecified'}
+              onPress={() => settings.set('gender', 'unspecified')}
+            />
+            <ThemedText variant="caption" style={{ marginTop: Spacing.sm }}>
+              {t('onboarding.genderPrivacy')}
+            </ThemedText>
           </View>
         )}
 

@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+import { NurBugunWidget } from '@/widgets/nur-bugun-widget';
 import { NurVakitWidget, type WidgetPrayerRow } from '@/widgets/nur-vakit-widget';
 
 const SAMPLE_ROWS: WidgetPrayerRow[] = [
@@ -35,19 +36,19 @@ const MOCK_PALETTES = {
     symbol: '☾',
   },
   day: {
-    bg: '#EDF0F5',
+    bg: '#EFEDE6',
     bgTop: '#FFFFFF',
-    header: '#64748B',
-    title: '#0F172A',
-    remaining: '#64748B',
-    time: '#A8821F',
-    fill: '#B7912A',
-    track: 'rgba(15,23,42,0.12)',
-    rowLabel: '#8A94A6',
-    rowTime: '#334155',
-    chip: 'rgba(15,23,42,0.08)',
-    nextLabel: '#7A6415',
-    nextTime: '#0F172A',
+    header: '#6B6A64',
+    title: '#1C1B18',
+    remaining: '#6B6A64',
+    time: '#0E7365',
+    fill: '#0E7365',
+    track: 'rgba(28,27,24,0.12)',
+    rowLabel: '#8B8A82',
+    rowTime: '#3C3B36',
+    chip: 'rgba(14,115,101,0.10)',
+    nextLabel: '#0A5B50',
+    nextTime: '#0E7365',
     symbol: '☀',
   },
 } as const;
@@ -144,6 +145,46 @@ function WidgetMock({ variant }: { variant: 'night' | 'day' }) {
   );
 }
 
+function TodayWidgetMock() {
+  const c = MOCK_PALETTES.night;
+  return (
+    <View
+      style={{
+        width: 170,
+        height: 170,
+        borderRadius: 26,
+        backgroundColor: c.bg,
+        padding: 14,
+        justifyContent: 'space-between',
+      }}
+    >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <ThemedText style={{ fontSize: 10, color: c.header }}>NUR · BUGÜN</ThemedText>
+        <ThemedText style={{ fontSize: 10, color: c.header }}>2/4 hafta</ThemedText>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View>
+          <ThemedText style={{ fontSize: 22, fontWeight: '700', color: c.title }}>İkindi</ThemedText>
+          <ThemedText style={{ fontSize: 10, color: c.remaining }}>24 dk kaldı</ThemedText>
+        </View>
+        <ThemedText style={{ fontSize: 29, fontWeight: '700', color: c.time }}>18:10</ThemedText>
+      </View>
+      <View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <ThemedText style={{ fontSize: 10, color: c.remaining }}>Yolculuk</ThemedText>
+          <ThemedText style={{ fontSize: 10, color: c.time }}>1/3</ThemedText>
+        </View>
+        <View style={{ height: 5, borderRadius: 3, backgroundColor: c.track, marginTop: 4 }}>
+          <View style={{ width: '33%', height: 5, borderRadius: 3, backgroundColor: c.fill }} />
+        </View>
+        <ThemedText style={{ fontSize: 11, color: c.title, marginTop: 7 }} numberOfLines={1}>
+          {"5 dk Kur'an oku"}
+        </ThemedText>
+      </View>
+    </View>
+  );
+}
+
 /**
  * Geliştirme amaçlı gizli ekran: ana ekran widget'ının tasarım önizlemesi.
  * Menülerden erişilmez; yalnızca /widget-preview adresiyle ve DEV modda açılır.
@@ -163,7 +204,7 @@ export default function WidgetPreviewScreen() {
         flexGrow: 1,
       }}
     >
-      <ThemedText variant="heading">Widget önizleme (4×2)</ThemedText>
+      <ThemedText variant="heading">Widget önizleme</ThemedText>
       {Platform.OS === 'android' ? (
         <>
           <WidgetPreview
@@ -178,6 +219,23 @@ export default function WidgetPreviewScreen() {
                 hijriText="24 Safer 1448"
                 progress={0.62}
                 rows={SAMPLE_ROWS}
+                night
+              />
+            )}
+          />
+          <WidgetPreview
+            width={170}
+            height={170}
+            renderWidget={() => (
+              <NurBugunWidget
+                prayerName="İkindi"
+                prayerTime="18:10"
+                remainingText="24 dk kaldı"
+                journeyCompleted={1}
+                journeyTotal={3}
+                weekCompleted={2}
+                weekGoal={4}
+                nextAction="5 dk Kur'an oku"
                 night
               />
             )}
@@ -205,6 +263,8 @@ export default function WidgetPreviewScreen() {
           <WidgetMock variant="night" />
           <ThemedText variant="caption">Gündüz</ThemedText>
           <WidgetMock variant="day" />
+          <ThemedText variant="caption">Bugün (2×2)</ThemedText>
+          <TodayWidgetMock />
         </>
       )}
       <ThemedText variant="caption" style={{ textAlign: 'center' }}>

@@ -13,6 +13,11 @@ sunan, Allah rızası gözetilerek geliştirilen mobil uygulama. Expo (React Nat
 - **Zikir & Dua** — animasyonlu dijital tesbih (odak modu, zincir mod), kaynaklı dua koleksiyonu, Esmaül Hüsna (99 isim), seçme hadisler
 - **İslami takvim** — hicri tarih, kandiller, bayramlar, Ramazan modu (imsakiye, sayaçlar)
 - **İbadet takibi** — yalnızca cihazda, karşılaştırmasız ve puansız
+- **Akıllı Günlük Yolculuk** — günün saatine göre namaz, 5 dakikalık Kur'an ve kısa zikir adımlarını tek sakin akışta birleştirir
+- **Yumuşak devamlılık** — seri kaybetme baskısı olmadan haftalık 3/4/5 anlamlı gün hedefi
+- **Kadınlara özel ibadet modu** — cihazda kalan muaf dönem kaydı, korunan devamlılık, geçici namaz bildirimi sessizliği ve isteğe bağlı dua/zikir/Kur'an önerileri
+- **Seyahat modu** — kullanıcı onaylı şehir değişimi, yeni vakit ve kıble, yakın camiler, yolculuk duaları ve çevrimdışı hazırlık
+- **Widget'lar** — Android'de Vakit (4×2) ve Bugün (2×2); iOS'ta ana ekran ile dairesel, dikdörtgen ve satır içi kilit ekranı görünümleri
 - **İlham** — sesli/altyazılı video akışı (bağımlılık hedeflemeyen tasarım), kategori filtreleri; arama ve öğrenme programları ayrı ekranlarda
 - **AI Asistan** — kaynaksız cevap göstermeyen, fetva vermeyen demo RAG asistanı
 - **Türkçe** tam destek; İngilizce ve Arapça (RTL) altyapısı hazır

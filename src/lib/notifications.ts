@@ -38,10 +38,23 @@ export async function syncPrayerNotifications(
   >,
   prayerNames: Record<string, string>,
   reminderTitle: string,
+  options?: { suppressPrayerNotifications?: boolean },
 ): Promise<void> {
   if (!NOTIFICATIONS_SUPPORTED) return;
-  await Notifications.cancelAllScheduledNotificationsAsync();
-  if (!s.notifications.prayersEnabled) return;
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    scheduled
+      .filter(
+        (request) =>
+          request.content.data?.category === 'prayer' ||
+          // Eski sürümlerde kategori etiketi yoktu; dil değişmiş olsa da NUR başlıklı
+          // etiketsiz planları bir defalık namaz hatırlatıcısı kabul edip temizle.
+          (request.content.data?.category === undefined &&
+            request.content.title === reminderTitle),
+      )
+      .map((request) => Notifications.cancelScheduledNotificationAsync(request.identifier)),
+  );
+  if (!s.notifications.prayersEnabled || options?.suppressPrayerNotifications) return;
 
   const now = new Date();
   for (const dayOffset of [0, 1]) {
@@ -65,6 +78,7 @@ export async function syncPrayerNotifications(
           title: reminderTitle,
           body: prayerNames[prayer] ?? prayer,
           sound: s.notifications.adhanSound !== 'silent',
+          data: { category: 'prayer', prayer },
         },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fireAt },
       });

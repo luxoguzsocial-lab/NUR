@@ -3,18 +3,40 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import '@/i18n';
-
 import { Colors } from '@/constants/theme';
 import { useHydrated } from '@/hooks/use-hydrated';
 import { useThemeMode } from '@/hooks/use-theme';
-import { applyLanguage } from '@/i18n';
+import i18nInstance, { applyLanguage } from '@/i18n';
 import { syncPrayerNotifications } from '@/lib/notifications';
-import i18nInstance from '@/i18n';
+import { useProgressStore } from '@/store/progress';
+import { shouldMutePrayerNotifications, usePrivateWorshipStore } from '@/store/private-worship';
 import { useSettingsStore } from '@/store/settings';
+import { useTasbihStore } from '@/store/tasbih';
+import { useTrackerStore } from '@/store/tracker';
+import { syncAndroidWidgets } from '@/widgets/android-widget-sync';
 import { syncIosWidget } from '@/widgets/ios-widget-data';
 
 void SplashScreen.preventAutoHideAsync();
+
+let notificationSyncQueue: Promise<void> = Promise.resolve();
+
+function syncSystemPrayerNotifications(): void {
+  notificationSyncQueue = notificationSyncQueue
+    .catch(() => undefined)
+    .then(() => {
+      const settings = useSettingsStore.getState();
+      const names: Record<string, string> = {};
+      for (const prayer of ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha']) {
+        names[prayer] = i18nInstance.t(`prayers.${prayer}`);
+      }
+      return syncPrayerNotifications(settings, names, i18nInstance.t('common.appName'), {
+        suppressPrayerNotifications:
+          !settings.onboardingCompleted ||
+          shouldMutePrayerNotifications(usePrivateWorshipStore.getState()),
+      });
+    })
+    .catch(() => undefined);
+}
 
 export default function RootLayout() {
   const hydrated = useHydrated();
@@ -28,29 +50,52 @@ export default function RootLayout() {
       void SplashScreen.hideAsync();
       // Açılışta namaz bildirim planını tazele (Vakit sekmesine girilmese bile)
       const s = useSettingsStore.getState();
-      const names: Record<string, string> = {};
-      for (const p of ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha']) {
-        names[p] = i18nInstance.t('prayers.' + p);
-      }
-      void syncPrayerNotifications(s, names, i18nInstance.t('common.appName'));
+      syncSystemPrayerNotifications();
       // iOS ana ekran widget'ına günün/yarının vakitlerini yaz
       syncIosWidget(s);
+      syncAndroidWidgets();
     }
   }, [hydrated, language]);
 
-  // Konum / hesap yöntemi değişince iOS widget verisini tazele
+  // Ayar veya ibadet ilerlemesi degisince ana ekran/kilit ekrani widget'larini tazele.
   useEffect(() => {
     if (!hydrated) return;
-    return useSettingsStore.subscribe((s, prev) => {
-      if (
-        s.location !== prev.location ||
-        s.calcMethod !== prev.calcMethod ||
-        s.madhab !== prev.madhab ||
-        s.adjustments !== prev.adjustments
-      ) {
-        syncIosWidget(s);
-      }
-    });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const scheduleSync = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        syncIosWidget(useSettingsStore.getState());
+        syncAndroidWidgets();
+      }, 350);
+    };
+    const unsubscribers = [
+      useSettingsStore.subscribe(scheduleSync),
+      useProgressStore.subscribe(scheduleSync),
+      useTrackerStore.subscribe(scheduleSync),
+      useTasbihStore.subscribe(scheduleSync),
+      usePrivateWorshipStore.subscribe(scheduleSync),
+    ];
+    return () => {
+      if (timer) clearTimeout(timer);
+      for (const unsubscribe of unsubscribers) unsubscribe();
+    };
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const scheduleSync = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(syncSystemPrayerNotifications, 250);
+    };
+    const unsubscribers = [
+      useSettingsStore.subscribe(scheduleSync),
+      usePrivateWorshipStore.subscribe(scheduleSync),
+    ];
+    return () => {
+      if (timer) clearTimeout(timer);
+      for (const unsubscribe of unsubscribers) unsubscribe();
+    };
   }, [hydrated]);
 
   if (!hydrated) return null;
@@ -87,6 +132,9 @@ export default function RootLayout() {
         <Stack.Screen name="mosques" options={{ title: t('mosques.title') }} />
         <Stack.Screen name="calendar" options={{ title: t('calendar.title') }} />
         <Stack.Screen name="tracker" options={{ title: t('tracker.title') }} />
+        <Stack.Screen name="private-worship" options={{ title: t('privateWorship.title') }} />
+        <Stack.Screen name="travel" options={{ title: t('travel.title') }} />
+        <Stack.Screen name="demo" options={{ headerShown: false }} />
         <Stack.Screen name="saved" options={{ title: t('saved.title') }} />
         <Stack.Screen name="notifications" options={{ title: t('notifications.title') }} />
         <Stack.Screen name="profile" options={{ title: t('profile.title') }} />

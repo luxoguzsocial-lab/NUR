@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
@@ -13,6 +14,7 @@ import { confirmDialog } from '@/lib/dialogs';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDateShort, todayISO } from '@/lib/format';
 import { useProgressStore } from '@/store/progress';
+import { isPrivateWorshipExemptDate, usePrivateWorshipStore } from '@/store/private-worship';
 import { useSettingsStore } from '@/store/settings';
 import { useTrackerStore, type TrackedPrayer } from '@/store/tracker';
 
@@ -24,9 +26,11 @@ export default function TrackerScreen() {
   const settings = useSettingsStore();
   const tracker = useTrackerStore();
   const progress = useProgressStore();
+  const privateWorship = usePrivateWorshipStore();
   const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const now = useMemo(() => new Date(), []);
   const dateISO = todayISO(now);
+  const todayExempt = isPrivateWorshipExemptDate(privateWorship, dateISO, dateISO);
 
   if (!settings.trackerEnabled) {
     return (
@@ -61,6 +65,7 @@ export default function TrackerScreen() {
         {days.map((iso) => {
           const rec = tracker.days[iso] ?? { prayers: {} };
           const done = TRACKED.filter((p) => rec.prayers[p]).length;
+          const exempt = isPrivateWorshipExemptDate(privateWorship, iso, dateISO);
           const d = new Date(iso);
           return (
             <View
@@ -70,9 +75,18 @@ export default function TrackerScreen() {
               <ThemedText variant="caption" style={{ width: 64 }}>
                 {formatDateShort(d, settings.language)}
               </ThemedText>
-              <ProgressBar ratio={done / TRACKED.length} style={{ flex: 1 }} />
+              {exempt ? (
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
+                  <Ionicons name="shield-checkmark-outline" size={15} color={theme.accent} />
+                  <ThemedText variant="caption" color={theme.accent}>
+                    {t('tracker.protectedDay')}
+                  </ThemedText>
+                </View>
+              ) : (
+                <ProgressBar ratio={done / TRACKED.length} style={{ flex: 1 }} />
+              )}
               <ThemedText variant="caption" style={{ width: 40, textAlign: 'right' }}>
-                {done}/{TRACKED.length}
+                {exempt ? '—' : `${done}/${TRACKED.length}`}
               </ThemedText>
               {rec.fasting ? <Ionicons name="moon-outline" size={14} color={theme.accent} /> : null}
             </View>
@@ -95,6 +109,18 @@ export default function TrackerScreen() {
       {view === 'daily' ? (
         <>
           {/* Namaz */}
+          {todayExempt ? (
+            <Card tone="accent" style={{ marginTop: Spacing.md }} onPress={() => router.push('/private-worship')}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
+                <Ionicons name="pause-circle" size={30} color={theme.accent} />
+                <View style={{ flex: 1 }}>
+                  <ThemedText variant="heading">{t('privateWorship.trackingPaused')}</ThemedText>
+                  <ThemedText variant="caption">{t('privateWorship.consistencyProtected')}</ThemedText>
+                </View>
+                <Ionicons name="chevron-forward" size={17} color={theme.textSecondary} />
+              </View>
+            </Card>
+          ) : (
           <Card style={{ marginTop: Spacing.md }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm }}>
               <ThemedText variant="heading">{t('home.prayerTracking')}</ThemedText>
@@ -124,6 +150,7 @@ export default function TrackerScreen() {
               })}
             </View>
           </Card>
+          )}
 
           {/* Oruç */}
           <Card style={{ marginTop: Spacing.sm }} onPress={() => tracker.toggleFasting(dateISO)}>

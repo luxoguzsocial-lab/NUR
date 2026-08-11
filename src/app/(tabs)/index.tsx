@@ -4,35 +4,34 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, View } from 'react-native';
 
+import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ProgressBar, SectionHeader, type IconName } from '@/components/ui-bits';
 import { Radius, Spacing } from '@/constants/theme';
 import { getDailyInspiration } from '@/data/inspiration';
-import { getProgramLessons, PROGRAMS } from '@/data/programs';
-import { getSurahMeta } from '@/data/quran';
-import { VIDEOS } from '@/data/videos';
-import { shareText } from '@/lib/share';
+import { LATEST_KHUTBAH } from '@/data/khutbah';
 import { useTheme, useThemeMode } from '@/hooks/use-theme';
+import { buildDailyJourney, buildGentleWeek, type JourneyTaskId } from '@/lib/daily-journey';
 import { formatDateLong, formatTime, todayISO } from '@/lib/format';
 import { formatHijri, isRamadan, toHijri } from '@/lib/hijri';
-import { getNextPrayer, getPrayerTimesForDate, PRAYER_ORDER } from '@/lib/prayer-times';
-import { upcomingReligiousDays } from '@/lib/religious-days';
+import { getNextPrayer, getPrayerTimesForDate } from '@/lib/prayer-times';
+import { shareText } from '@/lib/share';
+import { shouldSuggestTravel } from '@/lib/travel';
+import { observeCurrentLocation } from '@/lib/travel-location';
+import {
+  isPrivateWorshipActive,
+  isPrivateWorshipExemptDate,
+  usePrivateWorshipStore,
+} from '@/store/private-worship';
 import { useProgressStore } from '@/store/progress';
-import { useSettingsStore, type PrayerId } from '@/store/settings';
+import { useSettingsStore } from '@/store/settings';
 import { useTasbihStore } from '@/store/tasbih';
-import { useTrackerStore, type TrackedPrayer } from '@/store/tracker';
+import { useTrackerStore } from '@/store/tracker';
+import { useTravelStore } from '@/store/travel';
 
-const TRACKED: TrackedPrayer[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-
-const TRACKED_LABEL_KEY: Record<TrackedPrayer, string> = {
-  fajr: 'prayers.fajr',
-  dhuhr: 'prayers.dhuhr',
-  asr: 'prayers.asr',
-  maghrib: 'prayers.maghrib',
-  isha: 'prayers.isha',
-};
+const LOCALES = { tr: 'tr-TR', en: 'en-US', ar: 'ar' } as const;
 
 function greetingKey(hour: number): string {
   if (hour >= 5 && hour < 12) return 'home.greetingMorning';
@@ -41,13 +40,8 @@ function greetingKey(hour: number): string {
   return 'home.greetingNight';
 }
 
-function dayOfYear(date: Date): number {
-  const start = new Date(date.getFullYear(), 0, 0);
-  return Math.floor((date.getTime() - start.getTime()) / 86_400_000);
-}
-
-function pad(n: number): string {
-  return String(n).padStart(2, '0');
+function pad(value: number): string {
+  return String(value).padStart(2, '0');
 }
 
 function HeaderIcon({ icon, onPress, label }: { icon: IconName; onPress: () => void; label: string }) {
@@ -73,37 +67,91 @@ function HeaderIcon({ icon, onPress, label }: { icon: IconName; onPress: () => v
   );
 }
 
-function ShortcutTile({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+function JourneyRow({
+  icon,
+  title,
+  subtitle,
+  completed,
+  onPress,
+}: {
+  icon: IconName;
+  title: string;
+  subtitle: string;
+  completed: boolean;
+  onPress: () => void;
+}) {
   const theme = useTheme();
-  // Dış sarmalayıcı tam %25 genişlik alır; boşluk içteki padding ile verilir.
-  // Böylece her satır aynı hizada 4 sütun olur (son satır solda düzgün başlar).
   return (
-    <View style={{ width: '25%', padding: Spacing.xs / 2 }}>
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        style={({ pressed }) => ({
-          aspectRatio: 0.95,
-          borderRadius: Radius.lg,
-          backgroundColor: pressed ? theme.surfaceAlt : theme.surface,
-          borderWidth: 1,
-          borderColor: theme.border,
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ checked: completed }}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.md,
+        paddingVertical: Spacing.sm + 2,
+        opacity: pressed ? 0.75 : 1,
+      })}
+    >
+      <View
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: 21,
           alignItems: 'center',
           justifyContent: 'center',
-          gap: Spacing.xs,
-          paddingHorizontal: 2,
-        })}
+          backgroundColor: completed ? theme.primary : theme.primarySoft,
+        }}
       >
-        <Ionicons name={icon} size={24} color={theme.primary} />
-        <ThemedText
-          variant="caption"
-          style={{ textAlign: 'center', fontSize: 11, lineHeight: 13 }}
-          numberOfLines={2}
-        >
-          {label}
+        <Ionicons name={completed ? 'checkmark' : icon} size={20} color={completed ? theme.onPrimary : theme.primary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <ThemedText variant="label" style={completed ? { textDecorationLine: 'line-through' } : undefined}>
+          {title}
         </ThemedText>
-      </Pressable>
-    </View>
+        <ThemedText variant="caption">{subtitle}</ThemedText>
+      </View>
+      <Ionicons name="chevron-forward" size={17} color={theme.textSecondary} />
+    </Pressable>
+  );
+}
+
+function QuickAction({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => ({
+        width: '31.5%',
+        minHeight: 92,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: Spacing.sm,
+        borderRadius: Radius.lg,
+        borderWidth: 1,
+        borderColor: theme.border,
+        backgroundColor: pressed ? theme.surfaceAlt : theme.surface,
+      })}
+    >
+      <View
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: 19,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: theme.primarySoft,
+        }}
+      >
+        <Ionicons name={icon} size={20} color={theme.primary} />
+      </View>
+      <ThemedText variant="caption" style={{ textAlign: 'center' }} numberOfLines={2}>
+        {label}
+      </ThemedText>
+    </Pressable>
   );
 }
 
@@ -114,23 +162,29 @@ export default function HomeScreen() {
   const settings = useSettingsStore();
   const progress = useProgressStore();
   const tracker = useTrackerStore();
-  const tasbihHistory = useTasbihStore((s) => s.dailyHistory);
+  const privateWorship = usePrivateWorshipStore();
+  const travel = useTravelStore();
+  const tasbihHistory = useTasbihStore((state) => state.dailyHistory);
   const [now, setNow] = useState(() => new Date());
+  const [showAllFeatures, setShowAllFeatures] = useState(false);
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
   }, []);
 
   const { location, calcMethod, madhab, adjustments, language } = settings;
-  const hijri = toHijri(now);
-  const ramadan = isRamadan(now);
   const dateISO = todayISO(now);
-
+  const privateModeActive = isPrivateWorshipActive(privateWorship);
+  const todayExempt = isPrivateWorshipExemptDate(privateWorship, dateISO, dateISO);
+  const travelAutoDetectEnabled = travel.autoDetectEnabled;
+  const travelActive = travel.active;
+  const travelLastCheckedAt = travel.lastCheckedAt;
+  const travelDetectionDue =
+    travelLastCheckedAt === null || now.getTime() - travelLastCheckedAt >= 6 * 60 * 60 * 1000;
   const todayTimes = useMemo(
-    () =>
-      getPrayerTimesForDate(now, location.latitude, location.longitude, calcMethod, madhab, adjustments),
-    // Gün değişince (dateISO) yeniden hesapla; saniyelik tik'lerde değil
+    () => getPrayerTimesForDate(now, location.latitude, location.longitude, calcMethod, madhab, adjustments),
+    // Saniyelik tik yerine gun veya ayarlar degistiginde yeniden hesapla.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [location, calcMethod, madhab, adjustments, dateISO],
   );
@@ -138,70 +192,144 @@ export default function HomeScreen() {
     () => getNextPrayer(now, location.latitude, location.longitude, calcMethod, madhab, adjustments),
     [now, location, calcMethod, madhab, adjustments],
   );
-
-  // Dev geri sayım: SS:DD büyük, saniye küçük
   const remaining = Math.max(0, nextPrayer.remainingMs);
-  const remH = Math.floor(remaining / 3600_000);
-  const remM = Math.floor((remaining % 3600_000) / 60_000);
-  const remS = Math.floor((remaining % 60_000) / 1000);
-
-  const daily = useMemo(() => getDailyInspiration(now), [now]);
-  const nextEvent = useMemo(() => upcomingReligiousDays(now, 1)[0], [now]);
+  const remainingText = `${pad(Math.floor(remaining / 3_600_000))}:${pad(Math.floor((remaining % 3_600_000) / 60_000))}:${pad(Math.floor((remaining % 60_000) / 1000))}`;
 
   const dayRecord = tracker.days[dateISO] ?? { prayers: {} };
-  const prayersDone = TRACKED.filter((p) => dayRecord.prayers[p]).length;
-  const readMinutes = progress.quranMinutesByDay[dateISO] ?? 0;
-  const quranGoalMet = readMinutes >= settings.dailyQuranGoalMinutes;
-  const dhikrToday = Object.values(tasbihHistory[dateISO] ?? {}).reduce((a, b) => a + b, 0);
-  const lastReadSurah = progress.lastRead ? getSurahMeta(progress.lastRead.surah) : null;
-  const activeKhatm = progress.khatmPlans.find((p) => p.active);
-  const memorizedCount = Object.values(progress.memorization).reduce(
-    (sum, m) => sum + m.memorizedAyahs.length,
-    0,
+  const quranMinutes = progress.quranMinutesByDay[dateISO] ?? 0;
+  const dhikrByDay = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(tasbihHistory).map(([date, counts]) => [
+          date,
+          Object.values(counts).reduce((sum, count) => sum + count, 0),
+        ]),
+      ),
+    [tasbihHistory],
+  );
+  const dhikrToday = dhikrByDay[dateISO] ?? 0;
+  const journey = buildDailyJourney({
+    now,
+    prayerTimes: todayTimes.times,
+    dayRecord,
+    quranMinutes,
+    quranGoalMinutes: settings.dailyQuranGoalMinutes,
+    dhikrCount: dhikrToday,
+    prayerExempt: todayExempt,
+  });
+  const exemptDatesThisWeek = useMemo(() => {
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const mondayOffset = (today.getDay() + 6) % 7;
+    return Array.from({ length: mondayOffset + 1 }, (_, index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - mondayOffset + index);
+      return todayISO(date);
+    }).filter((iso) => isPrivateWorshipExemptDate(privateWorship, iso, dateISO));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateISO, privateWorship.periods]);
+  const gentleWeek = useMemo(
+    () =>
+      buildGentleWeek({
+        now,
+        trackerDays: tracker.days,
+        quranMinutesByDay: progress.quranMinutesByDay,
+        dhikrByDay,
+        goalDays: settings.weeklyJourneyGoalDays,
+        exemptDates: exemptDatesThisWeek,
+      }),
+    // now her saniye degisir; haftalik ozet gun degisiminde yenilenir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dateISO, tracker.days, progress.quranMinutesByDay, dhikrByDay, settings.weeklyJourneyGoalDays, exemptDatesThisWeek],
   );
 
-  // Günlük rutin: 5 vakit + oruç + Kur'an hedefi + zikir
-  const routineItems = [prayersDone === TRACKED.length, !!dayRecord.fasting, quranGoalMet, dhikrToday > 0];
-  const routineDone = routineItems.filter(Boolean).length;
-
-  const videoOfDay = VIDEOS[dayOfYear(now) % VIDEOS.length]!;
-
-  let nextLesson: { program: (typeof PROGRAMS)[number]; lesson: ReturnType<typeof getProgramLessons>[number] } | null =
-    null;
-  for (const program of PROGRAMS) {
-    const lesson = getProgramLessons(program.id).find((l) => !progress.completedLessons[l.id]);
-    if (lesson) {
-      nextLesson = { program, lesson };
-      break;
+  useEffect(() => {
+    if (
+      !travelAutoDetectEnabled ||
+      travelActive ||
+      !travelDetectionDue
+    ) {
+      return;
     }
-  }
+    useTravelStore.getState().markChecked(Date.now());
+    void observeCurrentLocation(false).then((result) => {
+      if (result.status !== 'ok') return;
+      const baseLocation = useTravelStore.getState().homeLocation ?? useSettingsStore.getState().location;
+      const latestTravel = useTravelStore.getState();
+      const dismissedRecently =
+        result.location.cityName === latestTravel.dismissedCityName &&
+        latestTravel.dismissedAt !== null &&
+        Date.now() - latestTravel.dismissedAt < 24 * 60 * 60 * 1000;
+      const awayFromBase = shouldSuggestTravel(result.location, baseLocation);
+      if (awayFromBase && !dismissedRecently) {
+        useTravelStore.getState().setPendingDestination(result.location);
+      } else if (!awayFromBase) {
+        useTravelStore.getState().clearDismissed();
+      }
+    });
+  }, [travelActive, travelAutoDetectEnabled, travelDetectionDue]);
 
-  // Lacivert vakit kartı + altın geri sayım (kullanıcı tasarımı)
+  const daily = getDailyInspiration(new Date(`${dateISO}T12:00:00`));
+  const hijri = toHijri(now);
+  // Vakit kartı: gece lacivert + altın; gündüz beyaz + koyu altın (gündüzde
+  // koyu kart "gece teması" izlenimi veriyordu)
+  // Vakit kartı: gece lacivert + altın; gündüz klasik yeşil (eski tema)
+  const heroDark = mode === 'dark';
+  const heroBg = heroDark ? '#1B2440' : '#22A188';
+  const heroGold = heroDark ? '#D4AF37' : '#FFFFFF';
   const heroText = '#FFFFFF';
-  const heroSub = 'rgba(226,232,240,0.75)';
-  const heroBg = mode === 'dark' ? '#1B2440' : '#0F172A';
-  const heroGold = '#D4AF37';
+  const heroSub = heroDark ? 'rgba(226,232,240,0.75)' : 'rgba(255,255,255,0.8)';
+  const heroDeco = 'rgba(255,255,255,0.08)';
+  const journeyRatio = journey.completed / Math.max(1, journey.total);
 
-  const shareAyah = () =>
-    void shareText(`${daily.ayah.arabic ? daily.ayah.arabic + '\n\n' : ''}${daily.ayah.text}\n— ${daily.ayah.source} · NUR`,);
+  const openJourneyTask = (taskId: JourneyTaskId) => {
+    if (taskId === 'prayer') {
+      router.push('/(tabs)/prayer');
+      return;
+    }
+    if (taskId === 'quran') {
+      router.push(progress.lastRead ? `/quran/surah/${progress.lastRead.surah}` : '/(tabs)/quran');
+      return;
+    }
+    router.push('/(tabs)/zikir');
+  };
+
+  const taskPresentation = (taskId: JourneyTaskId) => {
+    if (taskId === 'prayer') {
+      return {
+        icon: 'moon-outline' as IconName,
+        title: t('home.journey.prayerTask', {
+          prayer: t(`prayers.${journey.duePrayer}`),
+          defaultValue: `${t(`prayers.${journey.duePrayer}`)} namazını kaydet`,
+        }),
+      };
+    }
+    if (taskId === 'quran') {
+      return {
+        icon: 'book-outline' as IconName,
+        title: t('home.journey.quranTask', { minutes: 5, defaultValue: "5 dk Kur'an oku" }),
+      };
+    }
+    const periodKey = journey.period === 'morning' ? 'morningDhikr' : journey.period === 'evening' || journey.period === 'night' ? 'eveningDhikr' : 'calmDhikr';
+    return {
+      icon: 'ellipse-outline' as IconName,
+      title: t(`home.journey.${periodKey}`, { defaultValue: '33 zikir ile kısa bir mola ver' }),
+    };
+  };
+
+  const activatePendingTravel = () => {
+    const destination = travel.pendingDestination;
+    if (!destination) return;
+    travel.activate(settings.location, destination);
+    settings.set('location', destination);
+  };
 
   return (
     <Screen padded={false}>
       <View style={{ paddingHorizontal: Spacing.md }}>
-        {/* Başlık: selamlama + arama + ayarlar */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginTop: Spacing.lg,
-            gap: Spacing.sm,
-          }}
-        >
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: Spacing.lg, gap: Spacing.sm }}>
           <View style={{ flex: 1 }}>
             <ThemedText variant="secondary">{t(greetingKey(now.getHours()))}</ThemedText>
-            <ThemedText variant="title">
-              {settings.userName ? settings.userName : t('common.appName')}
-            </ThemedText>
+            <ThemedText variant="title">{settings.userName || t('common.appName')}</ThemedText>
             <ThemedText variant="caption">
               {formatDateLong(now, language)} · {formatHijri(hijri, language)}
             </ThemedText>
@@ -210,7 +338,6 @@ export default function HomeScreen() {
           <HeaderIcon icon="settings-outline" label={t('settings.title')} onPress={() => router.push('/settings')} />
         </View>
 
-        {/* HERO — dev geri sayım kartı */}
         <View
           style={{
             marginTop: Spacing.md,
@@ -218,33 +345,20 @@ export default function HomeScreen() {
             backgroundColor: heroBg,
             padding: Spacing.md,
             overflow: 'hidden',
+            borderWidth: 0,
           }}
         >
-          {/* Dekoratif daireler */}
           <View
             style={{
               position: 'absolute',
-              width: 190,
-              height: 190,
-              borderRadius: 95,
-              backgroundColor: 'rgba(255,255,255,0.08)',
-              right: -50,
-              top: -60,
+              width: 180,
+              height: 180,
+              borderRadius: 90,
+              right: -55,
+              top: -75,
+              backgroundColor: heroDeco,
             }}
           />
-          <View
-            style={{
-              position: 'absolute',
-              width: 150,
-              height: 150,
-              borderRadius: 75,
-              backgroundColor: 'rgba(0,0,0,0.06)',
-              left: -40,
-              bottom: 30,
-            }}
-          />
-
-          {/* Üst satır: konum + kıble */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Ionicons name="location-sharp" size={14} color={heroText} />
@@ -255,653 +369,336 @@ export default function HomeScreen() {
             <Pressable
               onPress={() => router.push('/qibla')}
               accessibilityRole="button"
+              accessibilityLabel={t('home.qibla')}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
             >
               <Ionicons name="compass-outline" size={16} color={heroText} />
-              <ThemedText variant="label" color={heroText}>
-                {t('home.qibla')}
-              </ThemedText>
+              <ThemedText variant="label" color={heroText}>{t('home.qibla')}</ThemedText>
             </Pressable>
           </View>
-
-          {/* Geri sayım — dokununca Vakit sekmesi */}
           <Pressable
             onPress={() => router.push('/(tabs)/prayer')}
             accessibilityRole="button"
-            style={{ alignItems: 'center', marginTop: Spacing.md }}
+            accessibilityLabel={t('home.timeToPrayer', { prayer: t(`prayers.${nextPrayer.prayer}`) })}
+            style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
           >
-            <ThemedText variant="secondary" color={heroSub}>
-              {t('home.timeToPrayer', { prayer: t(`prayers.${nextPrayer.prayer}`) })}
-            </ThemedText>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-              <ThemedText color={heroGold} style={{ fontSize: 76, fontWeight: '800', letterSpacing: 2 }}>
-                {pad(remH)}:{pad(remM)}
-              </ThemedText>
-              <ThemedText color={heroSub} style={{ fontSize: 34, fontWeight: '700' }}>
-                :{pad(remS)}
-              </ThemedText>
-            </View>
-            <View
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.22)',
-                borderRadius: Radius.full,
-                paddingHorizontal: Spacing.md,
-                paddingVertical: 4,
-              }}
-            >
-              <ThemedText variant="label" color={heroText}>
-                {t(`prayers.${nextPrayer.prayer}`)} · {formatTime(nextPrayer.time)}
-              </ThemedText>
-            </View>
-          </Pressable>
-
-          {/* Günlük hedef çubuğu (kullanıcı tasarımı): bugün işaretlenen namazlar */}
-          <View style={{ marginTop: Spacing.md }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 6,
-              }}
-            >
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: Spacing.md }}>
+            <View style={{ flex: 1 }}>
               <ThemedText variant="caption" color={heroSub}>
-                {t('home.dailyGoal')}
+                {t('home.timeToPrayer', { prayer: t(`prayers.${nextPrayer.prayer}`) })}
               </ThemedText>
-              <ThemedText variant="caption" color={heroGold} style={{ fontWeight: '700' }}>
-                %{Math.round((prayersDone / TRACKED.length) * 100)}
+              <ThemedText color={heroGold} style={{ fontSize: 43, lineHeight: 50, fontWeight: '800', letterSpacing: 1 }}>
+                {remainingText}
               </ThemedText>
             </View>
-            <View
-              style={{
-                height: 5,
-                borderRadius: 3,
-                backgroundColor: 'rgba(255,255,255,0.18)',
-                overflow: 'hidden',
-              }}
-            >
-              <View
-                style={{
-                  width: `${Math.round((prayersDone / TRACKED.length) * 100)}%`,
-                  height: '100%',
-                  borderRadius: 3,
-                  backgroundColor: heroGold,
-                }}
-              />
+            <View style={{ alignItems: 'flex-end', paddingBottom: 4 }}>
+              <ThemedText variant="heading" color={heroText}>{t(`prayers.${nextPrayer.prayer}`)}</ThemedText>
+              <ThemedText variant="secondary" color={heroSub}>{formatTime(nextPrayer.time)}</ThemedText>
             </View>
           </View>
-
-          {/* Vakit şeridi */}
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              marginTop: Spacing.md,
-              paddingTop: Spacing.md,
-              borderTopWidth: 1,
-              borderTopColor: 'rgba(255,255,255,0.25)',
-            }}
-          >
-            {PRAYER_ORDER.map((p: PrayerId) => {
-              const isNext = p === nextPrayer.prayer;
-              return (
-                <View
-                  key={p}
-                  style={{
-                    alignItems: 'center',
-                    backgroundColor: isNext ? 'rgba(255,255,255,0.24)' : 'transparent',
-                    borderRadius: Radius.md,
-                    paddingHorizontal: 7,
-                    paddingVertical: 5,
-                  }}
-                >
-                  <ThemedText variant="caption" color={isNext ? heroText : heroSub}>
-                    {t(`prayers.${p}`)}
-                  </ThemedText>
-                  <ThemedText
-                    variant="secondary"
-                    color={heroText}
-                    style={{ fontWeight: isNext ? '800' : '500' }}
-                  >
-                    {formatTime(todayTimes.times[p])}
-                  </ThemedText>
-                </View>
-              );
-            })}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.sm }}>
+            {(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const).map((prayer) => (
+              <View key={prayer} style={{ alignItems: 'center' }}>
+                <ThemedText variant="caption" color={prayer === nextPrayer.prayer ? heroGold : heroSub}>
+                  {t(`prayers.${prayer}`)}
+                </ThemedText>
+                <ThemedText variant="caption" color={heroText}>{formatTime(todayTimes.times[prayer])}</ThemedText>
+              </View>
+            ))}
           </View>
+          </Pressable>
         </View>
 
-        {/* Ramazan kartı — yalnızca Ramazan'da */}
-        {ramadan ? (
-          <Card tone="accent" style={{ marginTop: Spacing.sm }} onPress={() => router.push('/ramadan')}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-              <Ionicons name="moon" size={26} color={theme.accent} />
-              <ThemedText variant="heading" style={{ flex: 1 }}>
-                {t('ramadan.title')}
-              </ThemedText>
-              <Ionicons name="chevron-forward" size={18} color={theme.textSecondary} />
-            </View>
-          </Card>
-        ) : null}
-
-        {/* Cuma modu — yalnızca Cuma günleri */}
-        {now.getDay() === 5 ? (
-          <View
-            style={{
-              marginTop: Spacing.sm,
-              backgroundColor: theme.accentSoft,
-              borderRadius: Radius.xl,
-              borderWidth: 1,
-              borderColor: 'rgba(199,155,60,0.3)',
-              padding: Spacing.md,
-              gap: Spacing.sm,
-            }}
+        {isRamadan(now) || now.getDay() === 5 ? (
+          <Card
+            tone="accent"
+            style={{ marginTop: Spacing.sm }}
+            onPress={() => router.push(isRamadan(now) ? '/ramadan' : '/quran/surah/18')}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
-              <Ionicons name="sparkles" size={20} color={theme.accent} />
-              <ThemedText variant="heading">{t('home.fridayTitle')}</ThemedText>
+              <Ionicons name={isRamadan(now) ? 'moon' : 'sparkles'} size={20} color={theme.accent} />
+              <ThemedText variant="label" style={{ flex: 1 }}>
+                {isRamadan(now) ? t('ramadan.title') : t('home.fridayKahf')}
+              </ThemedText>
+              <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
             </View>
-            <ThemedText variant="caption" style={{ fontStyle: 'italic' }}>
-              {'\u201C' + t('home.fridayHadith') + '\u201D — ' + t('home.fridayHadithSource')}
-            </ThemedText>
-            <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
-              <Pressable
-                onPress={() => router.push('/quran/surah/18')}
-                accessibilityRole="button"
-                style={({ pressed }) => ({
-                  flex: 1,
-                  alignItems: 'center',
-                  paddingVertical: Spacing.sm,
-                  borderRadius: Radius.md,
-                  backgroundColor: theme.accent,
-                  opacity: pressed ? 0.85 : 1,
-                })}
-              >
-                <ThemedText variant="label" color="#FFF">
-                  {t('home.fridayKahf')}
+          </Card>
+        ) : null}
+
+        {travel.pendingDestination && !travel.active ? (
+          <Card tone="accent" style={{ marginTop: Spacing.sm }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+              <Ionicons name="airplane-outline" size={20} color={theme.accent} />
+              <View style={{ flex: 1 }}>
+                <ThemedText variant="label">{t('travel.newCityFound')}</ThemedText>
+                <ThemedText variant="caption">
+                  {t('travel.homeSuggestion', { city: travel.pendingDestination.cityName })}
                 </ThemedText>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  useTasbihStore.getState().setActive('salavat');
-                  router.push('/(tabs)/zikir');
-                }}
-                accessibilityRole="button"
-                style={({ pressed }) => ({
-                  flex: 1,
-                  alignItems: 'center',
-                  paddingVertical: Spacing.sm,
-                  borderRadius: Radius.md,
-                  backgroundColor: theme.surface,
-                  borderWidth: 1,
-                  borderColor: theme.accent,
-                  opacity: pressed ? 0.85 : 1,
-                })}
-              >
-                <ThemedText variant="label" color={theme.accent}>
-                  {t('home.fridaySalawat')}
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm }}>
+              <Button
+                title={t('travel.activate')}
+                onPress={activatePendingTravel}
+                style={{ flex: 1 }}
+              />
+              <Button
+                title={t('travel.notNow')}
+                variant="ghost"
+                onPress={travel.dismissPending}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </Card>
+        ) : null}
+
+        {travel.active ? (
+          <Card tone="primary" style={{ marginTop: Spacing.sm }} onPress={() => router.push('/travel')}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+              <Ionicons name="airplane" size={20} color={theme.primary} />
+              <View style={{ flex: 1 }}>
+                <ThemedText variant="label">{t('travel.activeTitle')}</ThemedText>
+                <ThemedText variant="caption">
+                  {t('travel.activeHomeBody', { city: travel.destination?.cityName ?? location.cityName })}
                 </ThemedText>
-              </Pressable>
+              </View>
+              <Ionicons name="chevron-forward" size={17} color={theme.textSecondary} />
+            </View>
+          </Card>
+        ) : null}
+
+        {privateModeActive ? (
+          <Card tone="accent" style={{ marginTop: Spacing.sm }} onPress={() => router.push('/private-worship')}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+              <Ionicons name="shield-checkmark-outline" size={20} color={theme.accent} />
+              <View style={{ flex: 1 }}>
+                <ThemedText variant="label">{t('privateWorship.activeTitle')}</ThemedText>
+                <ThemedText variant="caption">{t('privateWorship.homeBody')}</ThemedText>
+              </View>
+              <Ionicons name="chevron-forward" size={17} color={theme.textSecondary} />
+            </View>
+          </Card>
+        ) : null}
+
+        <SectionHeader title={t('home.journey.title', { defaultValue: "Bugünün Yolculuğu" })} />
+        <Card>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.sm }}>
+            <View style={{ flex: 1 }}>
+              <ThemedText variant="heading">
+                {t(`home.journey.period.${journey.period}`, { defaultValue: 'Bugün için küçük adımlar' })}
+              </ThemedText>
+              <ThemedText variant="caption">
+                {journey.completed}/{journey.total} {t('home.journey.completed', { defaultValue: 'tamamlandı' })}
+              </ThemedText>
+            </View>
+            <View
+              style={{
+                minWidth: 54,
+                height: 34,
+                borderRadius: 17,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: journey.completed === journey.total ? theme.primary : theme.primarySoft,
+              }}
+            >
+              <ThemedText variant="label" color={journey.completed === journey.total ? theme.onPrimary : theme.primary}>
+                %{Math.round(journeyRatio * 100)}
+              </ThemedText>
             </View>
           </View>
-        ) : null}
-
-        {/* Sabah/akşam ritmi */}
-        {now.getHours() >= 5 && now.getHours() < 12 ? (
-          <Card style={{ marginTop: Spacing.sm }} onPress={() => router.push('/duas/sabah')}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-              <View
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
-                  backgroundColor: theme.accentSoft,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Ionicons name="partly-sunny" size={20} color={theme.accent} />
+          <ProgressBar ratio={journeyRatio} style={{ marginBottom: Spacing.sm }} />
+          {journey.tasks.map((task, index) => {
+            const presentation = taskPresentation(task.id);
+            const subtitle = task.completed
+              ? t('home.journey.doneSoft', { defaultValue: 'Güzel, bugünkü adım tamam' })
+              : task.id === 'prayer'
+                ? t('home.journey.prayerHint', { defaultValue: 'Kıldığında tek dokunuşla kaydet' })
+                : `${task.current}/${task.target}`;
+            return (
+              <View key={task.id}>
+                {index > 0 ? <View style={{ height: 1, backgroundColor: theme.border }} /> : null}
+                <JourneyRow
+                  icon={presentation.icon}
+                  title={presentation.title}
+                  subtitle={subtitle}
+                  completed={task.completed}
+                  onPress={() => openJourneyTask(task.id)}
+                />
               </View>
-              <View style={{ flex: 1 }}>
-                <ThemedText variant="heading">{t('home.rhythmMorningTitle')}</ThemedText>
-                <ThemedText variant="caption">{t('home.rhythmMorningSub')}</ThemedText>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
-            </View>
-          </Card>
-        ) : now.getHours() >= 17 ? (
-          <Card style={{ marginTop: Spacing.sm }} onPress={() => router.push('/duas/aksam')}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-              <View
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
-                  backgroundColor: theme.primarySoft,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Ionicons name="moon" size={20} color={theme.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <ThemedText variant="heading">{t('home.rhythmEveningTitle')}</ThemedText>
-                <ThemedText variant="caption" numberOfLines={2}>
-                  {t('home.rhythmEveningSub')} · {t('home.rhythmReflection')}: {daily.reflection.text}
-                </ThemedText>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
-            </View>
-          </Card>
-        ) : null}
-
-        {/* Bugünkü İbadetlerim */}
-        {settings.trackerEnabled ? (
-          <>
-            <SectionHeader title={t('home.todayWorship')} onSeeAll={() => router.push('/tracker')} />
-            <Card>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.sm }}>
-                <ThemedText variant="label">{t('home.prayerTracking')}</ThemedText>
-                <ThemedText variant="label" color={theme.primary}>
-                  {prayersDone}/{TRACKED.length}
-                </ThemedText>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                {TRACKED.map((p) => {
-                  const done = !!dayRecord.prayers[p];
-                  // Vakti henüz gelmemiş namazlar kilitli (referans tasarım)
-                  const prayerTime = todayTimes.times[p === 'fajr' ? 'fajr' : p];
-                  const locked = !done && prayerTime.getTime() > now.getTime();
-                  return (
-                    <Pressable
-                      key={p}
-                      disabled={locked}
-                      onPress={() => tracker.togglePrayer(dateISO, p)}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: done, disabled: locked }}
-                      accessibilityLabel={`${t(TRACKED_LABEL_KEY[p])}${locked ? ` (${t('home.notYetTime')})` : ''}`}
-                      style={{ alignItems: 'center', gap: Spacing.xs, flex: 1 }}
-                    >
-                      <View
-                        style={{
-                          width: 46,
-                          height: 46,
-                          borderRadius: 23,
-                          backgroundColor: done ? theme.primary : theme.surfaceAlt,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          opacity: locked ? 0.55 : 1,
-                        }}
-                      >
-                        <Ionicons
-                          name={done ? 'checkmark' : locked ? 'lock-closed' : 'ellipse-outline'}
-                          size={done ? 22 : 16}
-                          color={done ? theme.onPrimary : theme.textSecondary}
-                        />
-                      </View>
-                      <ThemedText variant="caption">{t(TRACKED_LABEL_KEY[p])}</ThemedText>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              {/* Oruç + Kur'an hızlı satırı */}
-              <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.md }}>
-                <Pressable
-                  onPress={() => tracker.toggleFasting(dateISO)}
-                  accessibilityRole="button"
-                  style={({ pressed }) => ({
-                    flex: 1,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: Spacing.sm,
-                    paddingVertical: Spacing.sm + 2,
-                    borderRadius: Radius.md,
-                    backgroundColor: dayRecord.fasting ? theme.primarySoft : theme.surfaceAlt,
-                    opacity: pressed ? 0.8 : 1,
-                  })}
-                >
-                  <Ionicons
-                    name={dayRecord.fasting ? 'checkmark-circle' : 'restaurant-outline'}
-                    size={17}
-                    color={dayRecord.fasting ? theme.primary : theme.text}
-                  />
-                  <ThemedText variant="label" color={dayRecord.fasting ? theme.primary : theme.text}>
-                    {t('tracker.fasting')}
-                  </ThemedText>
-                </Pressable>
-                <Pressable
-                  onPress={() =>
-                    progress.lastRead
-                      ? router.push(`/quran/surah/${progress.lastRead.surah}`)
-                      : router.push('/(tabs)/quran')
-                  }
-                  accessibilityRole="button"
-                  style={({ pressed }) => ({
-                    flex: 1,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: Spacing.sm,
-                    paddingVertical: Spacing.sm + 2,
-                    borderRadius: Radius.md,
-                    backgroundColor: quranGoalMet ? theme.primarySoft : theme.surfaceAlt,
-                    opacity: pressed ? 0.8 : 1,
-                  })}
-                >
-                  <Ionicons
-                    name={quranGoalMet ? 'checkmark-circle' : 'book-outline'}
-                    size={17}
-                    color={quranGoalMet ? theme.primary : theme.text}
-                  />
-                  <ThemedText variant="label" color={quranGoalMet ? theme.primary : theme.text}>
-                    {t('tabs.quran')} {readMinutes}/{settings.dailyQuranGoalMinutes}
-                    {t('common.minuteShort')}
-                  </ThemedText>
-                </Pressable>
-              </View>
-
-              {/* Günlük rutin */}
-              <Pressable
-                onPress={() => router.push('/tracker')}
-                accessibilityRole="button"
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: Spacing.md,
-                  marginTop: Spacing.md,
-                  paddingTop: Spacing.sm,
-                  borderTopWidth: 1,
-                  borderTopColor: theme.border,
-                }}
-              >
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: theme.accentSoft,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Ionicons name="sunny-outline" size={18} color={theme.accent} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <ThemedText variant="label">{t('home.dailyRoutine')}</ThemedText>
-                  <ThemedText variant="caption">
-                    {routineDone}/{routineItems.length}
-                  </ThemedText>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
-              </Pressable>
-            </Card>
-          </>
-        ) : null}
-
-        {/* Asistan banner'ı */}
-        <Card style={{ marginTop: Spacing.md }} onPress={() => router.push('/assistant')}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-            <View
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: Radius.md,
-                backgroundColor: theme.primary,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name="sparkles" size={22} color={theme.onPrimary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <ThemedText variant="heading">{t('home.askAssistant')}</ThemedText>
-              <ThemedText variant="caption">{t('home.askAssistantSub')}</ThemedText>
-            </View>
-            <View
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 19,
-                backgroundColor: theme.primary,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name="arrow-forward" size={18} color={theme.onPrimary} />
-            </View>
+            );
+          })}
+          <View style={{ flexDirection: 'row', gap: Spacing.xs, alignItems: 'center', marginTop: Spacing.xs }}>
+            <Ionicons name="leaf-outline" size={14} color={theme.success} />
+            <ThemedText variant="caption" color={theme.success} style={{ flex: 1 }}>
+              {t('home.journey.gentleNote', { defaultValue: 'Az ama düzenli; kaçırılan bir gün ilerlemeni silmez.' })}
+            </ThemedText>
           </View>
         </Card>
 
-        {/* Günün/Gecenin Ayeti — altın kart, Arapça metinli */}
-        <SectionHeader
-          title={t(mode === 'dark' ? 'home.nightAyah' : 'home.dailyAyah')}
-          onSeeAll={() => router.push('/daily')}
-        />
-        <View
-          style={{
-            borderRadius: Radius.xl,
-            backgroundColor: theme.accentSoft,
-            padding: Spacing.md,
-            borderWidth: 1,
-            borderColor: mode === 'dark' ? 'rgba(212,175,90,0.25)' : 'rgba(176,138,46,0.25)',
-          }}
-        >
+        <SectionHeader title={t('home.consistency.title', { defaultValue: 'Yumuşak Devamlılık' })} />
+        <Card>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flex: 1 }}>
+              <ThemedText variant="heading">
+                {gentleWeek.goalDays === 0
+                  ? t('home.consistency.protectedWeekTitle', {
+                      count: gentleWeek.days.filter((day) => day.isExempt).length,
+                    })
+                  : `${gentleWeek.completedDays}/${gentleWeek.goalDays} ${t('home.consistency.days', { defaultValue: 'gün' })}`}
+              </ThemedText>
+              <ThemedText variant="caption">
+                {gentleWeek.goalDays === 0
+                  ? t('home.consistency.protectedWeek')
+                  : gentleWeek.goalMet
+                  ? t('home.consistency.goalMet', { defaultValue: 'Bu haftaki niyetin tamamlandı.' })
+                  : t('home.consistency.remaining', {
+                      count: gentleWeek.remainingDays,
+                      defaultValue: `Bu hafta ${gentleWeek.remainingDays} sakin gün daha`,
+                    })}
+              </ThemedText>
+            </View>
+            <Pressable onPress={() => router.push('/settings')} accessibilityRole="button">
+              <ThemedText variant="label" color={theme.primary}>
+                {t('home.consistency.editGoal', { defaultValue: 'Hedefi düzenle' })}
+              </ThemedText>
+            </Pressable>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.md }}>
+            {gentleWeek.days.map((day) => (
+              <View key={day.dateISO} style={{ alignItems: 'center', gap: 5 }}>
+                <View
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: day.completed
+                      ? theme.primary
+                      : day.isExempt
+                        ? theme.accentSoft
+                        : day.isToday
+                          ? theme.primarySoft
+                          : theme.surfaceAlt,
+                    borderWidth: day.isToday ? 2 : 0,
+                    borderColor: theme.primary,
+                    opacity: day.isFuture ? 0.55 : 1,
+                  }}
+                >
+                  <Ionicons
+                    name={day.completed ? 'checkmark' : day.isExempt ? 'shield-checkmark-outline' : day.isToday ? 'leaf-outline' : 'ellipse-outline'}
+                    size={16}
+                    color={day.completed ? theme.onPrimary : day.isExempt ? theme.accent : theme.textSecondary}
+                  />
+                </View>
+                <ThemedText variant="caption">
+                  {day.date
+                    .toLocaleDateString(LOCALES[language], { weekday: 'short' })
+                    .replace('.', '')
+                    .slice(0, 3)}
+                </ThemedText>
+              </View>
+            ))}
+          </View>
+          <ThemedText variant="caption" style={{ marginTop: Spacing.md }}>
+            {t(todayExempt ? 'home.consistency.exemptExplanation' : 'home.consistency.explanation', {
+              defaultValue: todayExempt
+                ? 'Muaf günün korunur; istersen dua, Kur’an ve zikirle yumuşakça devam edebilirsin.'
+                : "Namaz, Kur'an ve zikir alanlarından ikisine dokunduğun gün yeterlidir; seri baskısı yoktur.",
+            })}
+          </ThemedText>
+        </Card>
+
+        <SectionHeader title={t(mode === 'dark' ? 'home.nightAyah' : 'home.dailyAyah')} onSeeAll={() => router.push('/daily')} />
+        <Card tone="accent">
           {daily.ayah.arabic ? (
-            <ThemedText
-              variant="arabic"
-              style={{ textAlign: 'center', fontSize: 26, lineHeight: 46, marginBottom: Spacing.sm }}
-            >
+            <ThemedText variant="arabic" style={{ textAlign: 'center', fontSize: 25, lineHeight: 44, marginBottom: Spacing.sm }}>
               {daily.ayah.arabic}
             </ThemedText>
           ) : null}
           <ThemedText style={{ lineHeight: 23 }}>{daily.ayah.text}</ThemedText>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginTop: Spacing.md,
-            }}
-          >
-            <ThemedText variant="label" color={theme.accent}>
-              {daily.ayah.source}
-            </ThemedText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: Spacing.md }}>
+            <ThemedText variant="label" color={theme.accent} style={{ flex: 1 }}>{daily.ayah.source}</ThemedText>
             <Pressable
-              onPress={shareAyah}
+              onPress={() => void shareText(`${daily.ayah.arabic ? `${daily.ayah.arabic}\n\n` : ''}${daily.ayah.text}\n— ${daily.ayah.source} · NUR`)}
               accessibilityRole="button"
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+              accessibilityLabel={t('common.share')}
             >
-              <Ionicons name="share-social-outline" size={16} color={theme.accent} />
-              <ThemedText variant="label" color={theme.accent}>
-                {t('common.share')}
-              </ThemedText>
+              <Ionicons name="share-social-outline" size={19} color={theme.accent} />
             </Pressable>
           </View>
-        </View>
+        </Card>
 
-        {/* Yaklaşan Dinî Gün — tek kart */}
-        {nextEvent ? (
-          <>
-            <SectionHeader title={t('home.upcomingSingle')} onSeeAll={() => router.push('/calendar')} />
-            <Card onPress={() => router.push('/calendar')}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-                <View
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: Radius.md,
-                    backgroundColor: theme.accentSoft,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Ionicons
-                    name={nextEvent.type === 'eid' ? 'sparkles' : 'moon'}
-                    size={22}
-                    color={theme.accent}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <ThemedText variant="heading">{t(`religiousDays.${nextEvent.id}.name`)}</ThemedText>
-                  <ThemedText variant="caption">{formatDateLong(nextEvent.date, language)}</ThemedText>
-                </View>
-                <View
-                  style={{
-                    backgroundColor: theme.primarySoft,
-                    borderRadius: Radius.full,
-                    paddingHorizontal: Spacing.md,
-                    paddingVertical: 5,
-                  }}
-                >
-                  <ThemedText variant="label" color={theme.primary}>
-                    {t('calendar.daysLeft', {
-                      count: Math.ceil((nextEvent.date.getTime() - now.getTime()) / 86_400_000),
-                    })}
-                  </ThemedText>
-                </View>
-              </View>
-            </Card>
-          </>
-        ) : null}
-
-        {/* Günün videosu + sıradaki ders */}
-        <SectionHeader title={t('home.videoOfDay')} onSeeAll={() => router.push('/(tabs)/ilham')} />
-        <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
-          <Card style={{ flex: 1, padding: 0, overflow: 'hidden' }} onPress={() => router.push(`/video/${videoOfDay.id}`)}>
+        {/* Diyanet'in geçen cumaki hutbesi */}
+        <SectionHeader title={t('khutbah.title')} onSeeAll={() => router.push('/khutbah')} />
+        <Card onPress={() => router.push('/khutbah')}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
             <View
               style={{
-                height: 84,
-                backgroundColor: `hsl(${videoOfDay.thumbnailHue}, 45%, 26%)`,
+                width: 46,
+                height: 46,
+                borderRadius: 23,
+                backgroundColor: theme.primarySoft,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Ionicons name="play-circle" size={34} color="rgba(255,255,255,0.92)" />
-              {videoOfDay.media ? (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: 6,
-                    right: 6,
-                    backgroundColor: 'rgba(0,0,0,0.55)',
-                    borderRadius: Radius.full,
-                    paddingHorizontal: 6,
-                    paddingVertical: 1,
-                  }}
-                >
-                  <ThemedText variant="caption" color="#FFD86B" style={{ fontSize: 10 }}>
-                    ▶ {t('home.watch')}
-                  </ThemedText>
-                </View>
-              ) : null}
+              <Ionicons name="megaphone-outline" size={21} color={theme.primary} />
             </View>
-            <View style={{ padding: Spacing.sm }}>
-              <ThemedText variant="label" numberOfLines={2}>
-                {videoOfDay.title}
+            <View style={{ flex: 1 }}>
+              <ThemedText variant="heading">{LATEST_KHUTBAH.title}</ThemedText>
+              <ThemedText variant="caption" numberOfLines={2}>
+                “{LATEST_KHUTBAH.ayah.meal}” ({LATEST_KHUTBAH.ayah.reference})
               </ThemedText>
-              <ThemedText variant="caption" numberOfLines={1}>
-                {videoOfDay.creator.name}
+              <ThemedText variant="caption" color={theme.primary} style={{ marginTop: 2 }}>
+                {formatDateLong(new Date(`${LATEST_KHUTBAH.dateISO}T12:00:00`), language)} · Diyanet İşleri Başkanlığı
               </ThemedText>
             </View>
-          </Card>
-          <Card
-            style={{ flex: 1 }}
-            onPress={() => (nextLesson ? router.push(`/lesson/${nextLesson.lesson.id}`) : router.push('/programs'))}
-          >
-            <Ionicons name="school-outline" size={22} color={theme.accent} />
-            <ThemedText variant="caption" style={{ marginTop: Spacing.xs }}>
-              {t('home.nextLesson')}
-            </ThemedText>
-            {nextLesson ? (
-              <>
-                <ThemedText variant="label" numberOfLines={2}>
-                  {nextLesson.lesson.title}
-                </ThemedText>
-                <ThemedText variant="caption" numberOfLines={1} style={{ marginTop: 2 }}>
-                  {nextLesson.program.title}
-                </ThemedText>
-              </>
-            ) : (
-              <ThemedText variant="label">{t('home.allLessonsDone')}</ThemedText>
-            )}
-          </Card>
-        </View>
+            <Ionicons name="chevron-forward" size={16} color={theme.textSecondary} />
+          </View>
+        </Card>
 
-        {/* Hatim + ezber mini ilerleme */}
-        <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm }}>
-          <Card style={{ flex: 1 }} onPress={() => router.push('/quran/khatm')}>
-            <ThemedText variant="caption">{t('home.khatmProgress')}</ThemedText>
-            {activeKhatm ? (
-              <>
-                <ThemedText variant="heading" style={{ marginTop: 2 }}>
-                  %{Math.round((activeKhatm.completedDays.length / activeKhatm.totalDays) * 100)}
-                </ThemedText>
-                <ProgressBar
-                  ratio={activeKhatm.completedDays.length / activeKhatm.totalDays}
-                  style={{ marginTop: Spacing.xs }}
-                />
-              </>
-            ) : (
-              <ThemedText variant="label" color={theme.primary} style={{ marginTop: 2 }}>
-                {t('khatm.start', { defaultValue: 'Plan başlat' })}
-              </ThemedText>
-            )}
-          </Card>
-          <Card style={{ flex: 1 }} onPress={() => router.push('/quran/memorize')}>
-            <ThemedText variant="caption">{t('home.memorizationProgress')}</ThemedText>
-            <ThemedText variant="heading" style={{ marginTop: 2 }}>
-              {memorizedCount}
-            </ThemedText>
-            <ThemedText variant="caption">
-              {t('memorize.ayahsMemorized', { defaultValue: 'ezberlenen ayet' })}
-            </ThemedText>
-          </Card>
-          {progress.lastRead && lastReadSurah ? (
-            <Card style={{ flex: 1 }} onPress={() => router.push(`/quran/surah/${progress.lastRead!.surah}`)}>
-              <ThemedText variant="caption">{t('home.continueReading')}</ThemedText>
-              <ThemedText variant="heading" numberOfLines={1} style={{ marginTop: 2 }}>
-                {lastReadSurah.turkishName}
-              </ThemedText>
-              <ThemedText variant="caption">{progress.lastRead.ayah}. ayet</ThemedText>
-            </Card>
-          ) : null}
-        </View>
-
-        {/* Kısayollar */}
         <SectionHeader title={t('home.shortcuts')} />
-        <View
-          style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            marginHorizontal: -(Spacing.xs / 2),
-          }}
-        >
-          <ShortcutTile icon="checkmark-done-outline" label={t('menu.tracker')} onPress={() => router.push('/tracker')} />
-          <ShortcutTile icon="star-outline" label={t('menu.esma')} onPress={() => router.push('/esma')} />
-          <ShortcutTile icon="compass-outline" label={t('home.qibla')} onPress={() => router.push('/qibla')} />
-          <ShortcutTile icon="heart-outline" label={t('home.duas')} onPress={() => router.push('/duas')} />
-          <ShortcutTile icon="ellipse-outline" label={t('home.tasbih')} onPress={() => router.push('/(tabs)/zikir')} />
-          <ShortcutTile icon="play-circle-outline" label={t('home.videos')} onPress={() => router.push('/(tabs)/ilham')} />
-          <ShortcutTile icon="calendar-outline" label={t('menu.calendar')} onPress={() => router.push('/calendar')} />
-          <ShortcutTile icon="school-outline" label={t('home.lessons')} onPress={() => router.push('/programs')} />
-          <ShortcutTile icon="bookmark-outline" label={t('home.savedItems')} onPress={() => router.push('/saved')} />
-          <ShortcutTile icon="notifications-outline" label={t('notifications.title')} onPress={() => router.push('/notifications')} />
-          <ShortcutTile icon="sunny-outline" label={t('menu.daily')} onPress={() => router.push('/daily')} />
-          <ShortcutTile icon="repeat-outline" label={t('home.qadaShortcut')} onPress={() => router.push('/qada')} />
-          <ShortcutTile icon="business-outline" label={t('mosques.title')} onPress={() => router.push('/mosques')} />
-          <ShortcutTile icon="mic-outline" label={t('coach.title')} onPress={() => router.push('/quran/coach')} />
-          <ShortcutTile icon="happy-outline" label={t('kids.title')} onPress={() => router.push('/kids')} />
-          <ShortcutTile icon="chatbubbles-outline" label={t('tasbih.sectionHadiths')} onPress={() => router.push('/hadiths')} />
-          <ShortcutTile icon="person-outline" label={t('menu.profile')} onPress={() => router.push('/profile')} />
-          <ShortcutTile icon="information-circle-outline" label={t('menu.about')} onPress={() => router.push('/about')} />
-          <ShortcutTile
-            icon="share-social-outline"
-            label={t('home.shareApp')}
-            onPress={() => void shareText('NUR — İslami Yaşam Uygulaması 🌙')}
-          />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: '2.75%' }}>
+          <QuickAction icon="book-outline" label={t('tabs.quran')} onPress={() => router.push('/(tabs)/quran')} />
+          <QuickAction icon="ellipse-outline" label={t('home.tasbih')} onPress={() => router.push('/(tabs)/zikir')} />
+          <QuickAction icon="checkmark-done-outline" label={t('menu.tracker')} onPress={() => router.push('/tracker')} />
+          <QuickAction icon="compass-outline" label={t('home.qibla')} onPress={() => router.push('/qibla')} />
+          <QuickAction icon="heart-outline" label={t('home.duas')} onPress={() => router.push('/duas')} />
+          <QuickAction icon="sparkles-outline" label={t('home.askAssistant')} onPress={() => router.push('/assistant')} />
         </View>
+
+        <Pressable
+          onPress={() => setShowAllFeatures((value) => !value)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: showAllFeatures }}
+          style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Spacing.xs, paddingVertical: Spacing.md }}
+        >
+          <ThemedText variant="label" color={theme.primary}>
+            {showAllFeatures
+              ? t('home.hideFeatures', { defaultValue: 'Daha az göster' })
+              : t('home.allFeatures', { defaultValue: 'Tüm özellikler' })}
+          </ThemedText>
+          <Ionicons name={showAllFeatures ? 'chevron-up' : 'chevron-down'} size={16} color={theme.primary} />
+        </Pressable>
+
+        {showAllFeatures ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: '2.75%', marginBottom: Spacing.md }}>
+            <QuickAction icon="calendar-outline" label={t('menu.calendar')} onPress={() => router.push('/calendar')} />
+            <QuickAction icon="school-outline" label={t('home.lessons')} onPress={() => router.push('/programs')} />
+            <QuickAction icon="business-outline" label={t('mosques.title')} onPress={() => router.push('/mosques')} />
+            <QuickAction icon="star-outline" label={t('menu.esma')} onPress={() => router.push('/esma')} />
+            <QuickAction icon="happy-outline" label={t('kids.title')} onPress={() => router.push('/kids')} />
+            <QuickAction icon="bookmark-outline" label={t('home.savedItems')} onPress={() => router.push('/saved')} />
+            <QuickAction icon="repeat-outline" label={t('home.qadaShortcut')} onPress={() => router.push('/qada')} />
+            <QuickAction icon="mic-outline" label={t('coach.title')} onPress={() => router.push('/quran/coach')} />
+            <QuickAction icon="chatbubbles-outline" label={t('tasbih.sectionHadiths')} onPress={() => router.push('/hadiths')} />
+            {settings.gender !== 'male' ? (
+              <QuickAction icon="shield-checkmark-outline" label={t('privateWorship.shortTitle')} onPress={() => router.push('/private-worship')} />
+            ) : null}
+            <QuickAction icon="airplane-outline" label={t('travel.title')} onPress={() => router.push('/travel')} />
+          </View>
+        ) : null}
       </View>
     </Screen>
   );

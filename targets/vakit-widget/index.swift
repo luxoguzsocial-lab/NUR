@@ -16,10 +16,19 @@ struct PrayerItem: Codable, Identifiable {
     var date: Date { Date(timeIntervalSince1970: epoch) }
 }
 
+struct JourneySummary: Codable {
+    let completed: Int
+    let total: Int
+    let weekCompleted: Int
+    let weekGoal: Int
+    let nextAction: String
+}
+
 struct WidgetPayload: Codable {
     let city: String
     let hijri: String
     let prayers: [PrayerItem] // bugün + yarın, zamana göre sıralı (12 kayıt)
+    let journey: JourneySummary?
 }
 
 func loadPayload() -> WidgetPayload? {
@@ -137,17 +146,17 @@ struct VakitPalette {
 
     static let day = VakitPalette(
         gradientTop: .white,
-        gradientBottom: Color(red: 0.929, green: 0.941, blue: 0.961), // #EDF0F5
-        header: Color(red: 0.392, green: 0.455, blue: 0.545),         // #64748B
-        title: Color(red: 0.059, green: 0.090, blue: 0.165),          // #0F172A
-        remaining: Color(red: 0.392, green: 0.455, blue: 0.545),
-        time: Color(red: 0.659, green: 0.510, blue: 0.122),           // #A8821F
-        progress: Color(red: 0.718, green: 0.569, blue: 0.165),       // #B7912A
-        rowLabel: Color(red: 0.541, green: 0.580, blue: 0.651),       // #8A94A6
-        rowTime: Color(red: 0.200, green: 0.255, blue: 0.333),        // #334155
-        nextChip: Color(red: 0.059, green: 0.090, blue: 0.165).opacity(0.08),
-        nextLabel: Color(red: 0.478, green: 0.392, blue: 0.082),      // #7A6415
-        nextTime: Color(red: 0.059, green: 0.090, blue: 0.165),
+        gradientBottom: Color(red: 0.937, green: 0.929, blue: 0.902), // #EFEDE6
+        header: Color(red: 0.420, green: 0.416, blue: 0.392),         // #6B6A64
+        title: Color(red: 0.110, green: 0.106, blue: 0.094),          // #1C1B18
+        remaining: Color(red: 0.420, green: 0.416, blue: 0.392),
+        time: Color(red: 0.055, green: 0.451, blue: 0.396),           // #0E7365
+        progress: Color(red: 0.055, green: 0.451, blue: 0.396),
+        rowLabel: Color(red: 0.545, green: 0.541, blue: 0.510),       // #8B8A82
+        rowTime: Color(red: 0.235, green: 0.231, blue: 0.212),        // #3C3B36
+        nextChip: Color(red: 0.055, green: 0.451, blue: 0.396).opacity(0.10),
+        nextLabel: Color(red: 0.039, green: 0.357, blue: 0.314),      // #0A5B50
+        nextTime: Color(red: 0.055, green: 0.451, blue: 0.396),
         symbol: "☀"
     )
 }
@@ -156,6 +165,7 @@ struct VakitPalette {
 
 struct VakitWidgetView: View {
     var entry: VakitEntry
+    @Environment(\.widgetFamily) private var family
 
     private var palette: VakitPalette {
         (entry.payload?.isNight(at: entry.date) ?? true) ? .night : .day
@@ -164,7 +174,7 @@ struct VakitWidgetView: View {
     var body: some View {
         Group {
             if let payload = entry.payload, let next = payload.nextPrayer(after: entry.date) {
-                content(payload: payload, next: next)
+                familyContent(payload: payload, next: next)
             } else {
                 VStack(spacing: 6) {
                     Text("NUR")
@@ -178,12 +188,80 @@ struct VakitWidgetView: View {
             }
         }
         .containerBackground(for: .widget) {
-            LinearGradient(
-                colors: [palette.gradientTop, palette.gradientBottom],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            if family == .systemMedium {
+                LinearGradient(
+                    colors: [palette.gradientTop, palette.gradientBottom],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            } else {
+                Color.clear
+            }
         }
+        .widgetURL(URL(string: "nur://"))
+    }
+
+    @ViewBuilder
+    private func familyContent(payload: WidgetPayload, next: PrayerItem) -> some View {
+        switch family {
+        case .accessoryInline:
+            inlineContent(payload: payload, next: next)
+        case .accessoryCircular:
+            circularContent(payload: payload, next: next)
+        case .accessoryRectangular:
+            rectangularContent(payload: payload, next: next)
+        default:
+            content(payload: payload, next: next)
+        }
+    }
+
+    private func inlineContent(payload: WidgetPayload, next: PrayerItem) -> some View {
+        let journeyText = payload.journey.map { " · Bugün \($0.completed)/\($0.total)" } ?? ""
+        return Text("\(next.label) \(timeString(next.date))\(journeyText)")
+    }
+
+    private func circularContent(payload: WidgetPayload, next: PrayerItem) -> some View {
+        let completed = Double(payload.journey?.completed ?? 0)
+        let total = Double(max(1, payload.journey?.total ?? 3))
+        return Gauge(value: completed, in: 0...total) {
+            Text("NUR")
+        } currentValueLabel: {
+            VStack(spacing: 0) {
+                Text(String(next.label.prefix(2)))
+                    .font(.system(size: 10, weight: .semibold))
+                Text(timeString(next.date))
+                    .font(.system(size: 12, weight: .bold))
+                    .monospacedDigit()
+            }
+        }
+        .gaugeStyle(.accessoryCircularCapacity)
+        .widgetAccentable()
+    }
+
+    private func rectangularContent(payload: WidgetPayload, next: PrayerItem) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(next.label)
+                    .font(.headline)
+                Spacer()
+                Text(timeString(next.date))
+                    .font(.headline)
+                    .monospacedDigit()
+            }
+            Text(timerInterval: entry.date...next.date, countsDown: true)
+                .font(.caption)
+                .monospacedDigit()
+            if let journey = payload.journey {
+                HStack(spacing: 4) {
+                    Text("Bugün \(journey.completed)/\(journey.total)")
+                    Text("·")
+                    Text("Hafta \(journey.weekCompleted)/\(journey.weekGoal)")
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            }
+        }
+        .widgetAccentable()
     }
 
     @ViewBuilder
@@ -228,7 +306,23 @@ struct VakitWidgetView: View {
             ProgressView(timerInterval: prevDate...next.date, countsDown: false, label: { EmptyView() }, currentValueLabel: { EmptyView() })
                 .progressViewStyle(.linear)
                 .tint(c.progress)
-                .padding(.vertical, 6)
+                .padding(.top, 6)
+                .padding(.bottom, 4)
+
+            if let journey = payload.journey {
+                HStack(spacing: 5) {
+                    Text("Bugün \(journey.completed)/\(journey.total)")
+                        .fontWeight(.semibold)
+                    Text("·")
+                    Text(journey.nextAction)
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text("Hafta \(journey.weekCompleted)/\(journey.weekGoal)")
+                }
+                .font(.system(size: 9))
+                .foregroundStyle(c.remaining)
+                .padding(.bottom, 4)
+            }
 
             // Alt satır: günün 6 vakti
             HStack(spacing: 0) {
@@ -263,8 +357,8 @@ struct VakitWidget: Widget {
             VakitWidgetView(entry: entry)
         }
         .configurationDisplayName("NUR — Vakit")
-        .description("Sıradaki namaz vakti, kalan süre ve günün vakitleri.")
-        .supportedFamilies([.systemMedium])
+        .description("Sıradaki namaz vakti, günlük yolculuk ve haftalık devamlılık.")
+        .supportedFamilies([.systemMedium, .accessoryInline, .accessoryCircular, .accessoryRectangular])
     }
 }
 
@@ -293,5 +387,16 @@ private let samplePayload: WidgetPayload = {
             prayers.append(PrayerItem(key: key, label: label, epoch: at(h, m, day: day)))
         }
     }
-    return WidgetPayload(city: "İstanbul", hijri: "24 Safer 1448", prayers: prayers)
+    return WidgetPayload(
+        city: "İstanbul",
+        hijri: "24 Safer 1448",
+        prayers: prayers,
+        journey: JourneySummary(
+            completed: 1,
+            total: 3,
+            weekCompleted: 2,
+            weekGoal: 4,
+            nextAction: "5 dk Kur'an oku"
+        )
+    )
 }()
