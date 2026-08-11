@@ -347,8 +347,6 @@ export const en = {
       mwl: 'Muslim World League',
       ummalqura: 'Umm al-Qura (Makkah)',
       isna: 'ISNA (North America)',
-      egyptian: 'Egyptian General Authority',
-      karachi: 'University of Karachi',
     },
     location: 'Location',
     changeLocation: 'Change location',

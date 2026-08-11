@@ -34,10 +34,9 @@ export function calculationParams(methodId: CalcMethodId, madhab: MadhabId): Cal
         return CalculationMethod.UmmAlQura();
       case 'isna':
         return CalculationMethod.NorthAmerica();
-      case 'egyptian':
-        return CalculationMethod.Egyptian();
-      case 'karachi':
-        return CalculationMethod.Karachi();
+      default:
+        // Kaldırılmış bir yöntem (egyptian/karachi) cihazda kayıtlı kalmış olabilir
+        return CalculationMethod.Turkey();
     }
   })();
   params.madhab = madhab === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;

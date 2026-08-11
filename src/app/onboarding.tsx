@@ -44,7 +44,7 @@ const STEPS: Step[] = [
   'account',
 ];
 
-const METHODS: CalcMethodId[] = ['diyanet', 'mwl', 'ummalqura', 'isna', 'egyptian', 'karachi'];
+const METHODS: CalcMethodId[] = ['diyanet', 'mwl', 'ummalqura', 'isna'];
 
 const LANGUAGE_NATIVE: Record<Language, { name: string; sub: string }> = {
   tr: { name: 'Türkçe', sub: 'Varsayılan dil' },

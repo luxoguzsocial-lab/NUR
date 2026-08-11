@@ -286,8 +286,6 @@ export const trCommon = {
       mwl: 'Muslim World League',
       ummalqura: 'Umm al-Qura (Mekke)',
       isna: 'ISNA (Kuzey Amerika)',
-      egyptian: 'Mısır Genel Kurumu',
-      karachi: 'Karaçi Üniversitesi',
     },
     location: 'Konum',
     changeLocation: 'Konumu değiştir',
