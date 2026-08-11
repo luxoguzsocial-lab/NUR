@@ -198,26 +198,6 @@ export default function SettingsScreen() {
         ))}
       </View>
 
-      {/* Dakika düzeltmeleri */}
-      <SectionHeader title={t('prayerTimes.adjustments')} />
-      <Card>
-        <ThemedText variant="caption" style={{ marginBottom: Spacing.sm }}>
-          {t('prayerTimes.adjustmentInfo')}
-        </ThemedText>
-        {(['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'] as const).map((p) => (
-          <Row key={p} label={t(`prayers.${p}`)}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
-              <Chip label="−1" onPress={() => settings.setAdjustment(p, settings.adjustments[p] - 1)} />
-              <ThemedText style={{ width: 40, textAlign: 'center' }}>
-                {settings.adjustments[p] > 0 ? '+' : ''}
-                {settings.adjustments[p]}
-              </ThemedText>
-              <Chip label="+1" onPress={() => settings.setAdjustment(p, settings.adjustments[p] + 1)} />
-            </View>
-          </Row>
-        ))}
-      </Card>
-
       {/* Bildirimler */}
       <SectionHeader title={t('settings.prayerNotifications')} />
       <Card>

@@ -333,8 +333,6 @@ export const ar = {
     changeLocation: 'تغيير الموقع',
     autoLocation: 'تلقائي حسب الموقع',
     offlineNote: 'تُحسب المواقيت على الجهاز وتعمل دون اتصال بالإنترنت.',
-    adjustments: 'تعديلات الدقائق',
-    adjustmentInfo: 'يمكنكم إضافة ± دقائق لكل وقت للموافقة مع التقاويم المحلية.',
     notificationSettings: 'إعدادات الإشعارات',
     calculatedWith: 'طريقة الحساب: {{method}}',
   },
