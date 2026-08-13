@@ -48,3 +48,8 @@ tools/raw/
 tools/narration/
 tools/tmp/
 tools/quran-src/
+
+# Harici arac calisma alanlari (hassas veri icerebilir)
+.massgen/
+snapshots/
+temp_workspaces/

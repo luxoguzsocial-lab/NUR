@@ -55,6 +55,9 @@ export function VideoSurface({
         style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
         contentFit={contentFit}
         nativeControls={false}
+        // Mobil tarayıcı (özellikle iOS Safari) playsInline olmadan videoyu
+        // tam ekran yerel oynatıcıda açar; akış kaydırılamaz hâle gelir.
+        playsInline
       />
       {!playing ? (
         <View
