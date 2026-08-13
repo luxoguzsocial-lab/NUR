@@ -216,6 +216,56 @@ export const VIDEO_TEXTS = {
     speech:
       'Akrabalık bağı, Kur\'an\'da Allah\'a saygıyla birlikte anılır. Sıla-i rahim rızkı genişletir, ömrü bereketlendirir. Uzak kalmış bir akrabanızı bugün arayın. Küçük bir ziyaret, büyük bir gönül köprüsüdür.',
   },
+  v23: {
+    lines: [
+      'Kur\'an ile kurulan bağ, ömrün en değerli yatırımıdır.',
+      'Peygamberimiz: En hayırlınız, Kur\'an\'ı öğrenen ve öğretendir.',
+      'Her gün bir sayfa bile olsa süreklilik esastır.',
+      'Uygulamadaki okuma hedefiyle bugün başlayabilirsiniz.',
+    ],
+    speech:
+      'Kur\'an ile kurulan bağ, ömrün en değerli yatırımıdır. Peygamberimiz buyurur: Sizin en hayırlınız, Kur\'an\'ı öğrenen ve öğretendir. Her gün bir sayfa bile olsa süreklilik esastır. Uygulamadaki okuma hedefiyle bugün başlayabilirsiniz.',
+  },
+  v24: {
+    lines: [
+      'Kur\'an yalnız okumak için değil, düşünmek için indirildi.',
+      'Sâd suresi 29: ayetlerini düşünsünler diye mübarek bir kitap.',
+      'Bir ayet seçin, gün boyu aklınızda taşıyın.',
+      'Yağmurlu bir akşam, tefekkür için güzel bir vakittir.',
+    ],
+    speech:
+      'Kur\'an yalnız okumak için değil, düşünmek için indirildi. Sâd suresi yirmi dokuzuncu ayet der ki: ayetlerini düşünsünler diye indirilmiş mübarek bir kitaptır. Bir ayet seçin, gün boyu aklınızda taşıyın. Yağmurlu bir akşam, tefekkür için güzel bir vakittir.',
+  },
+  v25: {
+    lines: [
+      'Peygamberimiz, insanların en güler yüzlüsüydü.',
+      'Tirmizî\'de geçer: Kardeşine tebessüm etmen sadakadır.',
+      'Güler yüz, sünnetin en kolay ikramıdır.',
+      'Bugün karşılaştığınız herkese bir tebessüm hediye edin.',
+    ],
+    speech:
+      'Peygamberimiz, insanların en güler yüzlüsüydü. Tirmizî\'de geçer: Kardeşine tebessüm etmen senin için bir sadakadır. Güler yüz, sünnetin en kolay ikramıdır. Bugün karşılaştığınız herkese bir tebessüm hediye edin.',
+  },
+  v26: {
+    lines: [
+      'Yıldızlarla dolu bir gökyüzü, en eski davetiyedir.',
+      'Âl-i İmrân 190: göklerin yaratılışında akıl sahipleri için deliller vardır.',
+      'İman, evrenin diliyle de konuşur.',
+      'Bu gece başınızı kaldırıp bir dakika gökyüzünü seyredin.',
+    ],
+    speech:
+      'Yıldızlarla dolu bir gökyüzü, en eski davetiyedir. Âl-i İmrân suresi yüz doksanıncı ayet: göklerin ve yerin yaratılışında akıl sahipleri için deliller vardır. İman, evrenin diliyle de konuşur. Bu gece başınızı kaldırıp bir dakika gökyüzünü seyredin.',
+  },
+  v27: {
+    lines: [
+      'İftar sofrası, sabrın tatlı meyvesidir.',
+      'Hadiste geçer: oruçlunun iki sevinci vardır; biri iftar anıdır.',
+      'Bir hurma ve su ile başlamak sünnettir.',
+      'Sofranıza bir misafir eklemek bereketi katlar.',
+    ],
+    speech:
+      'İftar sofrası, sabrın tatlı meyvesidir. Hadiste geçer: oruçlunun iki sevinci vardır; biri iftar anıdır. Bir hurma ve su ile başlamak sünnettir. Sofranıza bir misafir eklemek bereketi katlar.',
+  },
   v18: {
     lines: [
       'Gece, dünyanın sustuğu ve kalbin konuştuğu vakittir.',

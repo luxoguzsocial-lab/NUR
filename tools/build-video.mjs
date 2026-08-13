@@ -23,11 +23,19 @@ const NARR_DIR = join(ROOT, 'tools', 'narration');
 const TMP_DIR = join(ROOT, 'tools', 'tmp');
 const OUT_DIR = join(ROOT, 'assets', 'videos');
 const FFMPEG = (await import('ffmpeg-static')).default;
-// Ana dili Türkçe ses (kullanıcı seçimi: "Ses 1 — Emel sıcak/sakin").
-// Çok dilli sesler (Giuseppe vb.) tr-TR kilidine rağmen yabancı aksana kayıyor;
-// yerli ses telaffuzu garanti eder.
-const VOICE = 'tr-TR-EmelNeural';
-const PROSODY = { rate: '-12%', pitch: '-4%' };
+// Ses ön ayarları: --voice=emel (varsayılan, kadın sıcak/sakin) | --voice=erkek
+// (ilk videolardaki olgun bariton — Giuseppe, tr-TR kilidiyle).
+const VOICE_PRESETS = {
+  emel: { voice: 'tr-TR-EmelNeural', prosody: { rate: '-12%', pitch: '-4%' } },
+  erkek: { voice: 'it-IT-GiuseppeMultilingualNeural', prosody: { rate: '-15%', pitch: '-12%' } },
+};
+const voiceArg = process.argv.find((a) => a.startsWith('--voice='))?.slice(8) ?? 'emel';
+if (!VOICE_PRESETS[voiceArg]) {
+  console.error(`Bilinmeyen ses: ${voiceArg} (gecerli: ${Object.keys(VOICE_PRESETS).join(', ')})`);
+  process.exit(1);
+}
+const VOICE = VOICE_PRESETS[voiceArg].voice;
+const PROSODY = VOICE_PRESETS[voiceArg].prosody;
 const FONT = 'C\\:/Windows/Fonts/arialbd.ttf';
 
 for (const d of [RAW_DIR, NARR_DIR, TMP_DIR, OUT_DIR]) mkdirSync(d, { recursive: true });
@@ -148,7 +156,7 @@ async function build(id) {
   return true;
 }
 
-const args = process.argv.slice(2);
+const args = process.argv.slice(2).filter((a) => !a.startsWith('--voice='));
 const ids = args.includes('--all')
   ? readdirSync(RAW_DIR).filter((f) => f.endsWith('.mp4')).map((f) => f.replace('.mp4', ''))
   : args;
