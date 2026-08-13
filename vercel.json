@@ -1,0 +1,15 @@
+{
+  "buildCommand": "npx expo export --platform web",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/video/:id", "destination": "/video/[id].html" },
+    { "source": "/program/:id", "destination": "/program/[id].html" },
+    { "source": "/lesson/:id", "destination": "/lesson/[id].html" },
+    { "source": "/duas/:category", "destination": "/duas/[category].html" },
+    { "source": "/quran/surah/:id", "destination": "/quran/surah/[id].html" },
+    { "source": "/quran/lesson/:id", "destination": "/quran/lesson/[id].html" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ]
+}
