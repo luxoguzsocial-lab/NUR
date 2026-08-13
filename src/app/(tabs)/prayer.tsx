@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Switch, View, useWindowDimensions } from 'react-native';
 
+import { BackToHome } from '@/components/back-to-home';
 import { Card } from '@/components/card';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
@@ -203,7 +204,8 @@ export default function PrayerTabScreen() {
   return (
     <Screen>
       {/* Başlık */}
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginTop: Spacing.lg }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginTop: Spacing.lg, gap: Spacing.sm }}>
+        <BackToHome style={{ marginTop: 2 }} />
         <View style={{ flex: 1 }}>
           <ThemedText variant="title">{t('prayerTimes.title')}</ThemedText>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>

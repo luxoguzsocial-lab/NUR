@@ -12,6 +12,7 @@ import { FlatList,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BackToHome } from '@/components/back-to-home';
 import { VideoSurface } from '@/components/media/video-surface';
 import { ThemedText } from '@/components/themed-text';
 import { DemoBadge } from '@/components/ui-bits';
@@ -372,12 +373,17 @@ export default function IlhamScreen() {
         getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
       />
 
+      {/* Sol üst: ana sayfaya dön (yarı saydam, akışın üstünde) */}
+      <View style={{ position: 'absolute', top: insets.top + Spacing.sm, left: Spacing.md, zIndex: 2 }}>
+        <BackToHome overlay />
+      </View>
+
       {/* Üst kategori çipleri */}
       <View style={{ position: 'absolute', top: insets.top + Spacing.sm, left: 0, right: 0 }}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: Spacing.md, gap: Spacing.sm }}
+          contentContainerStyle={{ paddingLeft: Spacing.md + 48, paddingRight: Spacing.md, gap: Spacing.sm }}
         >
           {[null, ...VIDEO_CATEGORIES.map((c) => c.id)].map((id) => {
             const selected = category === id;

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BackToHome } from '@/components/back-to-home';
 import { Card } from '@/components/card';
 import { TasbihBeads } from '@/components/content/tasbih-beads';
 import { Screen } from '@/components/screen';
@@ -253,9 +254,10 @@ export default function ZikirScreen() {
 
   return (
     <Screen>
-      <ThemedText variant="title" style={{ marginTop: Spacing.lg }}>
-        {t('tasbih.zikirTitle')}
-      </ThemedText>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginTop: Spacing.lg }}>
+        <BackToHome />
+        <ThemedText variant="title">{t('tasbih.zikirTitle')}</ThemedText>
+      </View>
 
       {/* Zikir seçici kart: ‹ Arapça / ad / anlam / kaynak › */}
       <Card style={{ marginTop: Spacing.md }}>

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, TextInput, View } from 'react-native';
 
+import { BackToHome } from '@/components/back-to-home';
 import { Card } from '@/components/card';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
@@ -208,7 +209,16 @@ export default function QuranTabScreen() {
 
   const header = (
     <View>
-      <View style={{ marginTop: Spacing.md, marginBottom: Spacing.sm }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: Spacing.sm,
+          marginTop: Spacing.md,
+          marginBottom: Spacing.sm,
+        }}
+      >
+        <BackToHome />
         <ThemedText variant="title">{t('quran.title')}</ThemedText>
       </View>
 
