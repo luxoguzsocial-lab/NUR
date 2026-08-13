@@ -546,16 +546,6 @@ export default function HomeScreen() {
                     })
                   : `${gentleWeek.completedDays}/${gentleWeek.goalDays} ${t('home.consistency.days', { defaultValue: 'gün' })}`}
               </ThemedText>
-              <ThemedText variant="caption">
-                {gentleWeek.goalDays === 0
-                  ? t('home.consistency.protectedWeek')
-                  : gentleWeek.goalMet
-                  ? t('home.consistency.goalMet', { defaultValue: 'Bu haftaki niyetin tamamlandı.' })
-                  : t('home.consistency.remaining', {
-                      count: gentleWeek.remainingDays,
-                      defaultValue: `Bu hafta ${gentleWeek.remainingDays} sakin gün daha`,
-                    })}
-              </ThemedText>
             </View>
             <Pressable onPress={() => router.push('/settings')} accessibilityRole="button">
               <ThemedText variant="label" color={theme.primary}>
@@ -600,13 +590,6 @@ export default function HomeScreen() {
               </View>
             ))}
           </View>
-          <ThemedText variant="caption" style={{ marginTop: Spacing.md }}>
-            {t(todayExempt ? 'home.consistency.exemptExplanation' : 'home.consistency.explanation', {
-              defaultValue: todayExempt
-                ? 'Muaf günün korunur; istersen dua, Kur’an ve zikirle yumuşakça devam edebilirsin.'
-                : "Namaz, Kur'an ve zikir alanlarından ikisine dokunduğun gün yeterlidir; seri baskısı yoktur.",
-            })}
-          </ThemedText>
         </Card>
 
         <SectionHeader title={t(mode === 'dark' ? 'home.nightAyah' : 'home.dailyAyah')} onSeeAll={() => router.push('/daily')} />
