@@ -13,7 +13,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { getDailyInspiration } from '@/data/inspiration';
 import { LATEST_KHUTBAH } from '@/data/khutbah';
 import { useTheme, useThemeMode } from '@/hooks/use-theme';
-import { buildDailyJourney, buildGentleWeek, type JourneyTaskId } from '@/lib/daily-journey';
+import { buildDailyJourney, type JourneyTaskId } from '@/lib/daily-journey';
 import { formatDateLong, formatTime, todayISO } from '@/lib/format';
 import { formatHijri, isRamadan, toHijri } from '@/lib/hijri';
 import { getNextPrayer, getPrayerTimesForDate } from '@/lib/prayer-times';
@@ -30,8 +30,6 @@ import { useSettingsStore } from '@/store/settings';
 import { useTasbihStore } from '@/store/tasbih';
 import { useTrackerStore } from '@/store/tracker';
 import { useTravelStore } from '@/store/travel';
-
-const LOCALES = { tr: 'tr-TR', en: 'en-US', ar: 'ar' } as const;
 
 function greetingKey(hour: number): string {
   if (hour >= 5 && hour < 12) return 'home.greetingMorning';
@@ -217,31 +215,6 @@ export default function HomeScreen() {
     dhikrCount: dhikrToday,
     prayerExempt: todayExempt,
   });
-  const exemptDatesThisWeek = useMemo(() => {
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const mondayOffset = (today.getDay() + 6) % 7;
-    return Array.from({ length: mondayOffset + 1 }, (_, index) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() - mondayOffset + index);
-      return todayISO(date);
-    }).filter((iso) => isPrivateWorshipExemptDate(privateWorship, iso, dateISO));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateISO, privateWorship.periods]);
-  const gentleWeek = useMemo(
-    () =>
-      buildGentleWeek({
-        now,
-        trackerDays: tracker.days,
-        quranMinutesByDay: progress.quranMinutesByDay,
-        dhikrByDay,
-        goalDays: settings.weeklyJourneyGoalDays,
-        exemptDates: exemptDatesThisWeek,
-      }),
-    // now her saniye degisir; haftalik ozet gun degisiminde yenilenir.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dateISO, tracker.days, progress.quranMinutesByDay, dhikrByDay, settings.weeklyJourneyGoalDays, exemptDatesThisWeek],
-  );
-
   useEffect(() => {
     if (
       !travelAutoDetectEnabled ||
@@ -532,63 +505,6 @@ export default function HomeScreen() {
             <ThemedText variant="caption" color={theme.success} style={{ flex: 1 }}>
               {t('home.journey.gentleNote', { defaultValue: 'Az ama düzenli; kaçırılan bir gün ilerlemeni silmez.' })}
             </ThemedText>
-          </View>
-        </Card>
-
-        <SectionHeader title={t('home.consistency.title', { defaultValue: 'Yumuşak Devamlılık' })} />
-        <Card>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ flex: 1 }}>
-              <ThemedText variant="heading">
-                {gentleWeek.goalDays === 0
-                  ? t('home.consistency.protectedWeekTitle', {
-                      count: gentleWeek.days.filter((day) => day.isExempt).length,
-                    })
-                  : `${gentleWeek.completedDays}/${gentleWeek.goalDays} ${t('home.consistency.days', { defaultValue: 'gün' })}`}
-              </ThemedText>
-            </View>
-            <Pressable onPress={() => router.push('/settings')} accessibilityRole="button">
-              <ThemedText variant="label" color={theme.primary}>
-                {t('home.consistency.editGoal', { defaultValue: 'Hedefi düzenle' })}
-              </ThemedText>
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.md }}>
-            {gentleWeek.days.map((day) => (
-              <View key={day.dateISO} style={{ alignItems: 'center', gap: 5 }}>
-                <View
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 17,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: day.completed
-                      ? theme.primary
-                      : day.isExempt
-                        ? theme.accentSoft
-                        : day.isToday
-                          ? theme.primarySoft
-                          : theme.surfaceAlt,
-                    borderWidth: day.isToday ? 2 : 0,
-                    borderColor: theme.primary,
-                    opacity: day.isFuture ? 0.55 : 1,
-                  }}
-                >
-                  <Ionicons
-                    name={day.completed ? 'checkmark' : day.isExempt ? 'shield-checkmark-outline' : day.isToday ? 'leaf-outline' : 'ellipse-outline'}
-                    size={16}
-                    color={day.completed ? theme.onPrimary : day.isExempt ? theme.accent : theme.textSecondary}
-                  />
-                </View>
-                <ThemedText variant="caption">
-                  {day.date
-                    .toLocaleDateString(LOCALES[language], { weekday: 'short' })
-                    .replace('.', '')
-                    .slice(0, 3)}
-                </ThemedText>
-              </View>
-            ))}
           </View>
         </Card>
 

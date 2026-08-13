@@ -221,7 +221,16 @@ export default function SettingsScreen() {
           </View>
         </Row>
         <Row label={t('settings.adhanSound')}>
-          <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
+          {/* Uzun etiketler dar ekranda taşmasın: sığmayan çip alt satıra iner */}
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end',
+              gap: Spacing.xs,
+              flex: 1,
+            }}
+          >
             {(
               [
                 ['default', t('settings.adhanDefault')],
@@ -238,24 +247,6 @@ export default function SettingsScreen() {
             ))}
           </View>
         </Row>
-      </Card>
-
-      {/* Yumuşak devamlılık */}
-      <SectionHeader title={t('settings.gentleJourney')} />
-      <Card>
-        <Row label={t('settings.weeklyJourneyGoal')}>
-          <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
-            {[3, 4, 5].map((days) => (
-              <Chip
-                key={days}
-                label={`${days} ${t('home.consistency.days')}`}
-                selected={settings.weeklyJourneyGoalDays === days}
-                onPress={() => settings.set('weeklyJourneyGoalDays', days)}
-              />
-            ))}
-          </View>
-        </Row>
-        <ThemedText variant="caption">{t('settings.weeklyJourneyInfo')}</ThemedText>
       </Card>
 
       {/* Kur'an görünümü */}
