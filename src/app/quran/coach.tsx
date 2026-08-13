@@ -10,7 +10,7 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from 'expo-audio';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Platform, Pressable, Switch, View } from 'react-native';
 
@@ -110,6 +110,14 @@ export default function CoachScreen() {
     playbackPlayer.pause();
     void recitation.play(surah, ayah.number);
   };
+
+  // Oturum sırasında konumu anlık kaydet: geri tuşuyla çıkılsa bile
+  // "kaldığın yerden devam et" en son çalışılan sure/ayeti gösterir.
+  useEffect(() => {
+    if (!active) return;
+    const current = ayahs[ayahIndex];
+    if (current) setLastPosition({ surah, ayah: current.number });
+  }, [active, surah, ayahIndex, ayahs, setLastPosition]);
 
   // Okunuş: elle yazılmışsa o, değilse kural tabanlı yaklaşık üretim
   const transliteration = ayah
@@ -376,7 +384,7 @@ export default function CoachScreen() {
         <Button title={t('coach.endSession')} variant="ghost" onPress={() => finishSession(false)} />
       </View>
 
-      {/* Adım göstergesi */}
+      {/* Adım butonları — dokunulabilir hissi: çerçeve + basınca küçülme */}
       <View style={{ flexDirection: 'row', gap: Spacing.xs, marginTop: Spacing.sm }}>
         {STEP_KEYS.map((key, i) => {
           const n = (i + 1) as Step;
@@ -387,19 +395,36 @@ export default function CoachScreen() {
               key={key}
               onPress={() => setStep(n)}
               accessibilityRole="button"
-              style={{
+              accessibilityState={{ selected: isCurrent }}
+              hitSlop={4}
+              style={({ pressed }) => ({
                 flex: 1,
+                flexDirection: 'row',
                 alignItems: 'center',
+                justifyContent: 'center',
+                gap: 3,
+                minHeight: 38,
                 paddingVertical: Spacing.xs,
+                paddingHorizontal: 2,
                 borderRadius: Radius.md,
-                backgroundColor: isCurrent ? theme.primary : isPast ? theme.primarySoft : theme.surfaceAlt,
-              }}
+                backgroundColor: isCurrent ? theme.primary : isPast ? theme.primarySoft : theme.surface,
+                borderWidth: 1.5,
+                borderColor: isCurrent || isPast ? theme.primary : theme.border,
+                opacity: pressed ? 0.6 : 1,
+                transform: [{ scale: pressed ? 0.95 : 1 }],
+              })}
             >
+              {isPast ? (
+                <Ionicons name="checkmark-circle" size={13} color={theme.primary} />
+              ) : null}
               <ThemedText
                 variant="caption"
-                color={isCurrent ? theme.onPrimary : isPast ? theme.primary : theme.textSecondary}
+                color={isCurrent ? theme.onPrimary : isPast ? theme.primary : theme.text}
+                style={{ fontWeight: isCurrent ? '700' : '600' }}
+                numberOfLines={1}
               >
-                {i + 1}. {t(`coach.${key}`)}
+                {isPast ? '' : `${i + 1}. `}
+                {t(`coach.${key}`)}
               </ThemedText>
             </Pressable>
           );

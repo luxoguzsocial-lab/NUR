@@ -1,5 +1,4 @@
 import * as Haptics from 'expo-haptics';
-import * as Speech from 'expo-speech';
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -11,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ProgressBar } from '@/components/ui-bits';
 import { Radius, Spacing } from '@/constants/theme';
 import { HARAKAT } from '@/data/elifba';
+import { speakArabic } from '@/lib/arabic-speech';
 import { useTheme } from '@/hooks/use-theme';
 import { useKidsStore } from '@/store/kids';
 
@@ -20,10 +20,8 @@ export default function HarakatScreen() {
   const learned = useKidsStore((s) => s.learnedHarakat);
   const toggleHaraka = useKidsStore((s) => s.toggleHaraka);
 
-  const speak = (text: string) => {
-    Speech.stop();
-    Speech.speak(text, { language: 'tr-TR', rate: 0.85 });
-  };
+  // Hece Arapça aslından, Arap telaffuzuyla okunur (ör. بَ → "be")
+  const speak = (sample: string) => speakArabic(sample, 0.7);
 
   return (
     <Screen>
@@ -76,7 +74,7 @@ export default function HarakatScreen() {
                 <Button
                   title={t('kids.listen')}
                   variant="secondary"
-                  onPress={() => speak(`${h.turkishName}. ${h.reading}`)}
+                  onPress={() => speak(h.sample)}
                   style={{ flex: 1 }}
                 />
                 <Button

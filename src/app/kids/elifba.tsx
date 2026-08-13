@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import * as Speech from 'expo-speech';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ProgressBar } from '@/components/ui-bits';
 import { Radius, Spacing } from '@/constants/theme';
 import { ELIFBA, ELIFBA_SOURCE } from '@/data/elifba';
+import { speakArabic, stopSpeech } from '@/lib/arabic-speech';
 import { useTheme } from '@/hooks/use-theme';
 import { useKidsStore } from '@/store/kids';
 
@@ -27,13 +27,11 @@ export default function ElifbaScreen() {
   const isLearned = learned.includes(letter.char);
   const allDone = learned.length >= ELIFBA.length;
 
-  const speak = (text: string) => {
-    Speech.stop();
-    Speech.speak(text, { language: 'tr-TR', rate: 0.85 });
-  };
+  // Harf ve örnek kelime Arapça aslından, Arap telaffuzuyla okunur
+  const speak = () => speakArabic(`${letter.char}. ${letter.example.arabic}`, 0.7);
 
   const goTo = (i: number) => {
-    Speech.stop();
+    stopSpeech();
     setIndex(Math.min(ELIFBA.length - 1, Math.max(0, i)));
   };
 
@@ -105,9 +103,7 @@ export default function ElifbaScreen() {
           <Button
             title={t('kids.listen')}
             variant="secondary"
-            onPress={() =>
-              speak(`${letter.name}. ${letter.example.transliteration}, ${letter.example.meaning}`)
-            }
+            onPress={speak}
             style={{ flex: 1 }}
           />
           <Button

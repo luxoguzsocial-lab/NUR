@@ -46,9 +46,11 @@ export default function HadithsScreen() {
               <ThemedText style={{ marginVertical: Spacing.sm, fontStyle: 'italic', lineHeight: 23 }}>
                 “{h.textTr}”
               </ThemedText>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <SourceBadge source={`${h.source} · ${h.grading}`} verified />
-                <View style={{ flexDirection: 'row', gap: Spacing.md }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+                <View style={{ flex: 1 }}>
+                  <SourceBadge source={`${h.source} · ${h.grading}`} verified />
+                </View>
+                <View style={{ flexDirection: 'row', gap: Spacing.md, flexShrink: 0 }}>
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={isSaved ? t('common.remove') : t('common.save')}

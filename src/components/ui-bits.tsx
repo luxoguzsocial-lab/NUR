@@ -106,9 +106,9 @@ export function SourceBadge({ source, verified }: { source: string; verified?: b
   const { t } = useTranslation();
   const theme = useTheme();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, flexWrap: 'wrap' }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, flexWrap: 'wrap', flexShrink: 1 }}>
       <Ionicons name="book-outline" size={12} color={theme.textSecondary} />
-      <ThemedText variant="caption">
+      <ThemedText variant="caption" style={{ flexShrink: 1 }}>
         {t('common.source')}: {source}
       </ThemedText>
       {verified !== undefined ? (
