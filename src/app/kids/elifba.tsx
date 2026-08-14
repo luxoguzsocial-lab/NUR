@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
@@ -11,8 +12,8 @@ import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ProgressBar } from '@/components/ui-bits';
 import { Radius, Spacing } from '@/constants/theme';
+import { LETTER_AUDIO } from '@/data/arabic-audio';
 import { ELIFBA, ELIFBA_SOURCE } from '@/data/elifba';
-import { speakArabic, stopSpeech } from '@/lib/arabic-speech';
 import { useTheme } from '@/hooks/use-theme';
 import { useKidsStore } from '@/store/kids';
 
@@ -27,17 +28,17 @@ export default function ElifbaScreen() {
   const isLearned = learned.includes(letter.char);
   const allDone = learned.length >= ELIFBA.length;
 
-  // Harf ve örnek kelime Arapça aslından, Arap telaffuzuyla okunur;
-  // cihazda Arapça ses yoksa okunuş metnine düşer (buton sessiz kalmaz)
-  const speak = () =>
-    void speakArabic(
-      `${letter.char}. ${letter.example.arabic}`,
-      `${letter.name}. ${letter.example.transliteration}`,
-      0.7,
-    );
+  // Alfabenin orijinal okunuşu: gömülü Arapça kayıt (harf adı + örnek kelime).
+  // Cihaz TTS'i kullanılmaz; her cihazda aynı otantik telaffuz çalar.
+  const player = useAudioPlayer(null);
+  const speak = () => {
+    player.replace(LETTER_AUDIO[index]);
+    void player.seekTo(0);
+    player.play();
+  };
 
   const goTo = (i: number) => {
-    stopSpeech();
+    player.pause();
     setIndex(Math.min(ELIFBA.length - 1, Math.max(0, i)));
   };
 

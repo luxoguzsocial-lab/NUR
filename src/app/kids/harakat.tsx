@@ -1,3 +1,4 @@
+import { useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,8 +10,8 @@ import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ProgressBar } from '@/components/ui-bits';
 import { Radius, Spacing } from '@/constants/theme';
+import { HARAKA_AUDIO } from '@/data/arabic-audio';
 import { HARAKAT } from '@/data/elifba';
-import { speakArabic } from '@/lib/arabic-speech';
 import { useTheme } from '@/hooks/use-theme';
 import { useKidsStore } from '@/store/kids';
 
@@ -20,9 +21,13 @@ export default function HarakatScreen() {
   const learned = useKidsStore((s) => s.learnedHarakat);
   const toggleHaraka = useKidsStore((s) => s.toggleHaraka);
 
-  // Hece Arapça aslından, Arap telaffuzuyla okunur (ör. بَ → "be");
-  // cihazda Arapça ses yoksa okunuş metnine düşer
-  const speak = (sample: string, reading: string) => void speakArabic(sample, reading, 0.7);
+  // Hecenin orijinal Arapça okunuşu: gömülü kayıt (cihaz TTS'i kullanılmaz)
+  const player = useAudioPlayer(null);
+  const speak = (harakaIndex: number) => {
+    player.replace(HARAKA_AUDIO[harakaIndex]);
+    void player.seekTo(0);
+    player.play();
+  };
 
   return (
     <Screen>
@@ -41,7 +46,7 @@ export default function HarakatScreen() {
       ) : null}
 
       <View style={{ marginTop: Spacing.md, gap: Spacing.md }}>
-        {HARAKAT.map((h) => {
+        {HARAKAT.map((h, harakaIndex) => {
           const done = learned.includes(h.name);
           return (
             <Card key={h.name} style={{ gap: Spacing.sm }}>
@@ -75,7 +80,7 @@ export default function HarakatScreen() {
                 <Button
                   title={t('kids.listen')}
                   variant="secondary"
-                  onPress={() => speak(h.sample, `${h.turkishName}. ${h.reading}`)}
+                  onPress={() => speak(harakaIndex)}
                   style={{ flex: 1 }}
                 />
                 <Button

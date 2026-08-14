@@ -1,3 +1,4 @@
+import { useAudioPlayer } from 'expo-audio';
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
@@ -10,8 +11,8 @@ import { SourceBadge } from '@/components/ui-bits';
 import { Radius, Spacing } from '@/constants/theme';
 import { KIDS_DUA_IDS } from '@/data/elifba';
 import { DUAS } from '@/data/duas';
+import { BESMELE_AUDIO, KIDS_DUA_AUDIO } from '@/data/arabic-audio';
 import { BESMELE_ARABIC, BESMELE_TRANSLITERATION } from '@/data/quran-text';
-import { speakArabic } from '@/lib/arabic-speech';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function KidsDuasScreen() {
@@ -21,9 +22,13 @@ export default function KidsDuasScreen() {
     (d): d is (typeof DUAS)[number] => !!d,
   );
 
-  // Dualar Arapça aslından, Arap telaffuzuyla okunur; cihazda Arapça
-  // ses yoksa okunuş metnine düşer (buton sessiz kalmaz)
-  const speak = (arabic: string, reading: string) => void speakArabic(arabic, reading, 0.75);
+  // Duaların orijinal Arapça okunuşu: gömülü kayıt (cihaz TTS'i kullanılmaz)
+  const player = useAudioPlayer(null);
+  const speak = (audio: number) => {
+    player.replace(audio);
+    void player.seekTo(0);
+    player.play();
+  };
 
   return (
     <Screen>
@@ -53,7 +58,7 @@ export default function KidsDuasScreen() {
         <Button
           title={t('kids.listen')}
           variant="secondary"
-          onPress={() => speak(BESMELE_ARABIC, BESMELE_TRANSLITERATION)}
+          onPress={() => speak(BESMELE_AUDIO)}
           style={{ alignSelf: 'stretch' }}
         />
       </Card>
@@ -80,7 +85,7 @@ export default function KidsDuasScreen() {
           <Button
             title={t('kids.listen')}
             variant="secondary"
-            onPress={() => speak(dua.arabic, dua.transliteration)}
+            onPress={() => speak(KIDS_DUA_AUDIO[dua.id])}
           />
           <SourceBadge source={dua.source} verified={dua.verified} />
         </Card>
