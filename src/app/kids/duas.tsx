@@ -21,8 +21,9 @@ export default function KidsDuasScreen() {
     (d): d is (typeof DUAS)[number] => !!d,
   );
 
-  // Dualar Arapça aslından, Arap telaffuzuyla okunur (okunuş metni değil)
-  const speak = (arabic: string) => speakArabic(arabic, 0.75);
+  // Dualar Arapça aslından, Arap telaffuzuyla okunur; cihazda Arapça
+  // ses yoksa okunuş metnine düşer (buton sessiz kalmaz)
+  const speak = (arabic: string, reading: string) => void speakArabic(arabic, reading, 0.75);
 
   return (
     <Screen>
@@ -52,7 +53,7 @@ export default function KidsDuasScreen() {
         <Button
           title={t('kids.listen')}
           variant="secondary"
-          onPress={() => speak(BESMELE_ARABIC)}
+          onPress={() => speak(BESMELE_ARABIC, BESMELE_TRANSLITERATION)}
           style={{ alignSelf: 'stretch' }}
         />
       </Card>
@@ -79,7 +80,7 @@ export default function KidsDuasScreen() {
           <Button
             title={t('kids.listen')}
             variant="secondary"
-            onPress={() => speak(dua.arabic)}
+            onPress={() => speak(dua.arabic, dua.transliteration)}
           />
           <SourceBadge source={dua.source} verified={dua.verified} />
         </Card>

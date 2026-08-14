@@ -27,8 +27,14 @@ export default function ElifbaScreen() {
   const isLearned = learned.includes(letter.char);
   const allDone = learned.length >= ELIFBA.length;
 
-  // Harf ve örnek kelime Arapça aslından, Arap telaffuzuyla okunur
-  const speak = () => speakArabic(`${letter.char}. ${letter.example.arabic}`, 0.7);
+  // Harf ve örnek kelime Arapça aslından, Arap telaffuzuyla okunur;
+  // cihazda Arapça ses yoksa okunuş metnine düşer (buton sessiz kalmaz)
+  const speak = () =>
+    void speakArabic(
+      `${letter.char}. ${letter.example.arabic}`,
+      `${letter.name}. ${letter.example.transliteration}`,
+      0.7,
+    );
 
   const goTo = (i: number) => {
     stopSpeech();

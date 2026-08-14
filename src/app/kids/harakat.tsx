@@ -20,8 +20,9 @@ export default function HarakatScreen() {
   const learned = useKidsStore((s) => s.learnedHarakat);
   const toggleHaraka = useKidsStore((s) => s.toggleHaraka);
 
-  // Hece Arapça aslından, Arap telaffuzuyla okunur (ör. بَ → "be")
-  const speak = (sample: string) => speakArabic(sample, 0.7);
+  // Hece Arapça aslından, Arap telaffuzuyla okunur (ör. بَ → "be");
+  // cihazda Arapça ses yoksa okunuş metnine düşer
+  const speak = (sample: string, reading: string) => void speakArabic(sample, reading, 0.7);
 
   return (
     <Screen>
@@ -74,7 +75,7 @@ export default function HarakatScreen() {
                 <Button
                   title={t('kids.listen')}
                   variant="secondary"
-                  onPress={() => speak(h.sample)}
+                  onPress={() => speak(h.sample, `${h.turkishName}. ${h.reading}`)}
                   style={{ flex: 1 }}
                 />
                 <Button
